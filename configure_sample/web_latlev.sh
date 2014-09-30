@@ -7,15 +7,8 @@
 OVERWRITE="no"
 
 #----- X/Y/Z/T/V -----#
-#HGRID_LIST=( 144x72 zmean_72 zmean_72x18 )  # standard
-#HGRID_LIST=( 144x72 zmean_72x18 )
-HGRID_LIST=( 144x72 zmean_72 )
-#TGRID_LIST=( tstep monthly_mean )
+HGRID_LIST=( 144x72 zmean_72 zmean_72x18 )  # standard
 TGRID_LIST=( tstep monthly_mean )
-
-#START_DATE=19780601 ; ENDPP_DATE=19910601  # finish
-#START_DATE=19890719 ; ENDPP_DATE=19910601  # for ms_[ls]whr
-#START_DATE=19910601 ; ENDPP_DATE=19970601
 
 START_DATE=20040601 ; ENDPP_DATE=20040602
 
@@ -36,13 +29,9 @@ VARS=( \
     ms_lwhr \
     ms_swhr \
     )
-VARS=( ma_tem ma_pres )
-
-# ms_lwhr & ms_swhr: available only for 19890719-
-#VARS=( ms_pres )
 
 VARS_TSTEP=( ${VARS[@]} )           # for tstep
-#VARS_TSTEP_1=( ${VARS_TSTEP[@]} )   # reduce_grid.sh
+VARS_TSTEP_1=( ${VARS_TSTEP[@]} )   # reduce_grid.sh
 VARS_TSTEP_2_1=( ${VARS_TSTEP[@]} ) # z2pre.sh (multi level)
 #VARS_TSTEP_2_3=( ms_omega )         # plev_omega.sh
 VARS_TSTEP_3=( ${VARS_TSTEP[@]} )   # zonal_mean.sh
