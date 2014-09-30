@@ -15,6 +15,7 @@ DIR_NICAM=/home/kodama/NICAM_src/bin
 BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
+BIN_ZONAL_MEAN=zonal_mean
 
 export LANG=en
 export F_UFMTENDIAN="big"

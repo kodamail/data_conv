@@ -128,7 +128,6 @@ for KEY in ml_zlev ; do
     done
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
-    echo ${DIR_IN}
     [ ! -d ${DIR_IN} ] && continue
     VARS_TSTEP_2_1=( $( expand_vars ${#VARS_TSTEP_2_1[@]} ${VARS_TSTEP_2_1[@]} ) )
     VARS_TEMP=( ${VARS_TSTEP_2_1[@]} )
@@ -163,9 +162,6 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	fi
     done
 done
-
-echo "ok"
-exit
 
 
 #    #
@@ -328,11 +324,11 @@ for KEY in isccp ll ml_zlev ml_plev ol sl ; do
 #	for TGRID in ${TGRID_LIST[@]} ; do
 	for TGRID in tstep ; do
 	    for DIR_IN in \
-		../${KEY}/${HGRID}/${TGRID}               \
-		../${KEY}/${HGRID}x${ZDEF_NAT}/${TGRID}   \
-		../${KEY}/${HGRID}x${ZDEF_ISCCP}/${TGRID} \
-		../${KEY}/${HGRID}x3/${TGRID}             \
-		../${KEY}/${HGRID}x${PDEF}/${TGRID} ; do
+		../../${KEY}/${HGRID}/${TGRID}               \
+		../../${KEY}/${HGRID}x${ZDEF_NAT}/${TGRID}   \
+		../../${KEY}/${HGRID}x${ZDEF_ISCCP}/${TGRID} \
+		../../${KEY}/${HGRID}x3/${TGRID}             \
+		../../${KEY}/${HGRID}x${PDEF}/${TGRID} ; do
 		[ -d ${DIR_IN} ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	    done
 	done

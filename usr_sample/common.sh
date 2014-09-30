@@ -15,7 +15,4 @@ BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 
-
-
-
-
+BIN_ZONAL_MEAN=zonal_mean-0.03r1
