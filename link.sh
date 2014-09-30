@@ -4,59 +4,11 @@
 # Before execution, check
 # -VAR="?l_*" and "dfq_isccp2" is snapshot or mean
 #
-
-# do not delete existing symbolic links
-USE_OLD=1
-
-#
-# directry of control files
-#
-#EXT=grd
-EXT=nc
-
-#INPUT_DIR_CTL=../../data_1st/ctl_nc
-
-i=0
-INPUT_DIR_CTL_LIST=() ; INPUT_ML_LIST=()
-
-#----------------------------------------#
-
-INPUT_DIR_CTL_LIST[$i]=../../data_2nd/output/ctl_nc/00144x00072.zorg.torg
-INPUT_ML_LIST[$i]=ml_zlev
-let i++
-
-INPUT_DIR_CTL_LIST[$i]=../../data_2nd/output/ctl_nc/00288x00145.zorg.torg
-INPUT_ML_LIST[$i]=ml_zlev
-let i++
-
-INPUT_DIR_CTL_LIST[$i]=../../data_2nd/output/ctl_nc/00360x00181.zorg.torg
-INPUT_ML_LIST[$i]=ml_zlev
-let i++
-
-INPUT_DIR_CTL_LIST[$i]=../../data_2nd/output/ctl_nc/00144x00072.p37.torg
-INPUT_ML_LIST[$i]=ml_plev
-let i++
-
-INPUT_DIR_CTL_LIST[$i]=../../data_2nd/output/ctl_nc/00288x00145.p37.torg
-INPUT_ML_LIST[$i]=ml_plev
-let i++
-
-INPUT_DIR_CTL_LIST[$i]=../../data_2nd/output/ctl_nc/00360x00181.p26.torg
-INPUT_ML_LIST[$i]=ml_plev
-let i++
-
-#----------------------------------------#
-
-BIN_GRADS_CTL=grads_ctl.pl
-#BIN_GRADS_CTL=/cwork5/kodama/program/sh_lib/grads_ctl/dev/grads_ctl.pl
-
-BIN_DIFF_PATH=diff-path
-#BIN_DIFF_PATH=/cwork5/kodama/program/sh_lib/diff-path/dev/diff-path
-
+. ./common.sh
+. ./usr/cnf_link.sh
 
 #----------------------------------------#
 CHSUB_BREAK_LIST=()
-#for INPUT_DIR_CTL in ${INPUT_DIR_CTL_LIST[@]} ; do
 for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
     INPUT_DIR_CTL=${INPUT_DIR_CTL_LIST[$i]}
     INPUT_ML=${INPUT_ML_LIST[$i]}
@@ -114,17 +66,17 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	elif [ "${SA}" = "s" -o "${SA}" = "l" ] ; then  # snapshot
 	    PERIOD="${PERIOD}_tstep"
 	else
-	    echo "error: SA=${SA} is not supported"
+	    echo "error in $0: SA=${SA} is not supported"
 	    exit 1
 	fi
         #
 	[ "${ZDEF}" = "0" ] && ZDEF=1
 	if [ "${ZDEF}" = "1" -o "${TAG}" = "ll" ] ; then
-	    OUTPUT_DIR=../${TAG}/${XDEF}x${YDEF}/tstep/${VAR}
-	    OUTPUT_DIR2=../${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
+	    OUTPUT_DIR=../../${TAG}/${XDEF}x${YDEF}/tstep/${VAR}
+	    OUTPUT_DIR2=../../${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
 	else
-	    OUTPUT_DIR=../${TAG}/${XDEF}x${YDEF}x${ZDEF}/tstep/${VAR}
-	    OUTPUT_DIR2=../${TAG}/${XDEF}x${YDEF}x${ZDEF}/${PERIOD}/${VAR}
+	    OUTPUT_DIR=../../${TAG}/${XDEF}x${YDEF}x${ZDEF}/tstep/${VAR}
+	    OUTPUT_DIR2=../../${TAG}/${XDEF}x${YDEF}x${ZDEF}/${PERIOD}/${VAR}
 	fi 
 	mkdir -p ${OUTPUT_DIR} ${OUTPUT_DIR2}
 	OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
@@ -178,4 +130,4 @@ if [ ${#CHSUB_BREAK_LIST[*]} -gt 0 ] ; then
     echo ""
 fi
 
-echo "link.sh normally finishes"
+echo "$0 normally finished"

@@ -5,6 +5,14 @@
 #   create_temp
 #   trap "finish zonal_mean.sh" 0
 #
+# Note: Do not edit common.sh. The variables should be overwritten by usr/*.sh
+#
+
+
+BIN_GRADS_CTL=grads_ctl.pl
+BIN_DIFF_PATH=diff-path
+
+
 
 ## directly of control files of raw data
 ##DIR_RAW_CTL=../../data_1st/ctl
