@@ -11,9 +11,10 @@
 BIN_GRADS_CTL=grads_ctl.pl
 BIN_DIFF_PATH=diff-path
 
-DIR_NICAM=/home/kodama/NICAM_src
-BIN_ROUGHEN=${DIR_NICAM}/bin/roughen
-BIN_NC2CTL=${DIR_NICAM}/bin/nc2ctl
+DIR_NICAM=/home/kodama/NICAM_src/bin
+BIN_NC2CTL=${DIR_NICAM}/nc2ctl
+BIN_ROUGHEN=${DIR_NICAM}/roughen
+BIN_Z2PRE=${DIR_NICAM}/z2pre
 
 export LANG=en
 export F_UFMTENDIAN="big"

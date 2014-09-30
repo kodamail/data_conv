@@ -121,13 +121,14 @@ for KEY in ml_zlev ; do
 	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 #	for TGRID in ${TGRID_LIST[@]} ; do
 	for TGRID in tstep ; do
-	    for DIR_IN in ../${KEY}/${HGRID}x${ZDEF_NAT}/${TGRID} ; do
+	    for DIR_IN in ../../${KEY}/${HGRID}x${ZDEF_NAT}/${TGRID} ; do
 		[ -d ${DIR_IN} ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	    done
 	done
     done
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    echo ${DIR_IN}
     [ ! -d ${DIR_IN} ] && continue
     VARS_TSTEP_2_1=( $( expand_vars ${#VARS_TSTEP_2_1[@]} ${VARS_TSTEP_2_1[@]} ) )
     VARS_TEMP=( ${VARS_TSTEP_2_1[@]} )
@@ -162,6 +163,9 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	fi
     done
 done
+
+echo "ok"
+exit
 
 
 #    #
