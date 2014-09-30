@@ -1,4 +1,3 @@
-#!/bin/sh
 #
 # Example:
 #   . common.sh 
@@ -12,6 +11,12 @@
 BIN_GRADS_CTL=grads_ctl.pl
 BIN_DIFF_PATH=diff-path
 
+DIR_NICAM=/home/kodama/NICAM_src
+BIN_ROUGHEN=${DIR_NICAM}/bin/roughen
+BIN_NC2CTL=${DIR_NICAM}/bin/nc2ctl
+
+export LANG=en
+export F_UFMTENDIAN="big"
 
 
 ## directly of control files of raw data
@@ -39,11 +44,6 @@ BIN_DIFF_PATH=diff-path
 #ZDEF_NAT=$( ${BIN_GRADS_CTL} ctl=${REF_CTL} ${OPT_NC} key=ZDEF target=NUM )
 #ZDEF_ISCCP=49
 
-XDEF_NAT=2560
-YDEF_NAT=1280
-ZDEF_NAT=38
-ZDEF_ISCCP=49
-
 
 # GrADS command and version
 GRADS_CMD="grads"
@@ -52,7 +52,6 @@ GRADS_VER="2.0.a7.1"
 BIN_GRADS_CTL=grads_ctl.pl
 #BIN_GRADS_CTL=/cwork5/kodama/program/sh_lib/grads_ctl/dev/grads_ctl.pl
 
-BIN_NC2CTL=/cwork5/kodama/201207_netcdf/src_redwood/NICAM_20120724_mod05/bin/nc2ctl
 
 # stdout and stderr logs
 if [ "${LOG_STDOUT}" = "" ] ; then
@@ -201,12 +200,12 @@ function expand_vars()
         shift
     done
 
-    VARS_ISCCP=( $( ls ../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
-    VARS_LL=(    $( ls ../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_ML=(    $( ls ../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep 2>/dev/null ) \
+    VARS_ISCCP=( $( ls ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
+    VARS_LL=(    $( ls ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_ML=(    $( ls ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep 2>/dev/null ) \
 	      ms_omega ms_z )
-    VARS_OL=(    $( ls ../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_SL=(    $( ls ../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
     VARS_ALL=(   ${VARS_ISCCP[@]} ${VARS_LL[@]} ${VARS_ML[@]} ${VARS_OL[@]} ${VARS_SL[@]} \
 	         ${VARS_ADV[@]} )
