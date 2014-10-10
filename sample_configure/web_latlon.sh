@@ -8,7 +8,7 @@ OVERWRITE="no"
 
 #----- X/Y/Z/T/V -----#
 #HGRID_LIST=( 144x72 2560x1280 )
-HGRID_LIST=( 144x72 360x181 2560x1280 )  # standard
+HGRID_LIST=( 144x72 360x181 2560x1280 zmean_72 zmean_1280 )  # standard
 #HGRID_LIST=( 360x181 )
 #HGRID_LIST=( 288x145 )  # extra
 TGRID_LIST=( tstep monthly_mean )  # standard
