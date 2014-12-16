@@ -1,3 +1,5 @@
+*~
 configure/[^.]*
 log/
+temp_*/
 usr/[^.]*
