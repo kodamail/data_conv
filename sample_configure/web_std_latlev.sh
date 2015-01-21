@@ -7,7 +7,7 @@
 OVERWRITE="no"
 
 #----- X/Y/Z/T/V -----#
-HGRID_LIST=( 144x72 zmean_72x37 )  # standard
+HGRID_LIST=( 144x72 288x145 zmean_72x37 zmean_145x37 )  # standard
 TGRID_LIST=( tstep monthly_mean )
 
 START_DATE=20040601 ; ENDPP_DATE=20040701
