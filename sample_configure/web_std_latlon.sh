@@ -19,6 +19,7 @@ VARS=( \
     oa_icr       \
     sa_cldi      \
     sa_cldw      \
+    sa_evap      \
     sa_lh_sfc    \
     sa_lwd_sfc   \
     sa_lwu_sfc   \
@@ -26,14 +27,17 @@ VARS=( \
     sa_lwu_toa_c \
     sa_q2m       \
     sa_sh_sfc    \
+    sa_slp       \
     sa_swd_sfc   \
     sa_swu_sfc   \
     sa_swd_toa   \
     sa_swu_toa   \
     sa_swu_toa_c \
-    sa_slp       \
     sa_t2m       \
+    sa_tem_sfc   \
     sa_tppn      \
+    sa_u10m      \
+    sa_v10m      \
     )
 
 VARS_TSTEP=( ${VARS[@]} )           # for tstep
