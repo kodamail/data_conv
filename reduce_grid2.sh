@@ -266,8 +266,22 @@ for VAR in ${VAR_LIST[@]} ; do
     varmax        = 1,                  ! variable number
     varname       = '${VAR}',
     undef         = -99.9e+33,
+EOF
+
+	# if YDEF is odd  -> [-90:90]
+	# if YDEF is even -> [-8_:8_] (default in roughen)
+	let YDEF_OUT_TMP=YDEF_OUT/2*2
+	if [ ${YDEF_OUT} -ne ${YDEF_OUT_TMP} ] ; then
+	    cat >> roughen.cnf <<EOF
+    latmin_out = -90.0
+    latmax_out = 90.0
+EOF
+	fi
+	cat >> roughen.cnf <<EOF
 /
 EOF
+	
+
         ${BIN_ROUGHEN} || exit 1
 #    mv roughen.cnf ${VAR}_output_${DAYS}dy.grd ../${OUTPUT_DIR}/${VAR}
 	mv ${VAR}_${DATE}.grd ../${OUTPUT_DIR}/${VAR}
