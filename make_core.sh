@@ -2,8 +2,6 @@
 #
 # flexible analysis system for NICAM output
 #
-# last updated 2011.11.25
-#
 # TODO: combine TID(DAYS) and YEAR/MONTH -> DATE
 # TODO: support z->p for native grid (such as for gl06)
 # TODO: complex configure (e.g. using namelist-like syntax)
@@ -167,25 +165,6 @@ done
 #    #
 #    # one pressure level in high horizontal resolution -> use multiple-configure instead!
 #    #
-#
-#    DIR_IN=../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep
-#    if [ -d ${DIR_IN} ] ; then
-#	VARS_TSTEP_2_2=( $( expand_vars ${#VARS_TSTEP_2_2[@]} ${VARS_TSTEP_2_2[@]} ) )
-#	VARS_TEMP=( ${VARS_TSTEP_2_2[@]} )
-#	#[ "${VARS_TSTEP_2_2[0]}" = "ALL" ] && VARS_TEMP=( `ls ${DIR_IN}` )
-#	VARS_TEMP=( $( dep_var ${#VARS_TEMP[@]}  ${VARS_TEMP[@]} \
-#                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) )
-#	for VAR in ${VARS_TEMP[@]} ; do
-#	    for PDEF_LEVELS in ${PDEF_LEVELS_NAT[@]} ; do
-#	        PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-#		VAR_CHILD=$( ls --color=never ${DIR_IN} 2>/dev/null | grep ^${VAR}$ )
-#		[ "${VAR_CHILD}" != "${VAR}" ] && continue
-#		DIR_OUT=../ml_plev/${XDEF_NAT}x${YDEF_NAT}_p${PDEF_LEVELS}/tstep
-#		./z2pre.sh ${TID} ${DIR_IN} ${DIR_OUT} \
-#		    ${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
-#	    done
-#	done
-#    fi
 
 #
 # omega velocity in low horizontal resolution
@@ -196,7 +175,7 @@ for KEY in ml_plev ; do
     for HGRID in ${HGRID_LIST[@]} ; do
 	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 	for TGRID in tstep ; do
-	    for DIR_INOUT in ../${KEY}/${HGRID}x${PDEF}/${TGRID} ; do
+	    for DIR_INOUT in ../../${KEY}/${HGRID}x${PDEF}/${TGRID} ; do
 		[ -d ${DIR_INOUT} ] && DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
 	    done
 	done
@@ -216,9 +195,12 @@ for DIR_INOUT in ${DIR_INOUT_LIST[@]} ; do
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 	DIR_INOUT_NEW=$( echo ${DIR_INOUT} | sed -e "s|/tstep$|/${PERIOD}|" )
 	#
+#	./plev_omega.sh ${START_DATE} ${ENDPP_DATE} \
+#	    ${DIR_INOUT_NEW} \
+#	    ${PDEF_LEVELS_RED[0]} ms_w ms_rho none none ${OVERWRITE} || exit 1
 	./plev_omega.sh ${START_DATE} ${ENDPP_DATE} \
 	    ${DIR_INOUT_NEW} \
-	    ${PDEF_LEVELS_RED[0]} ms_w ms_rho ${OVERWRITE} || exit 1
+	    ${PDEF_LEVELS_RED[0]} ms_w none ms_tem ${OVERWRITE} || exit 1
 	#
 	RESULT=$( diff ${DIR_INOUT_NEW}/ms_w/ms_w.ctl ${DIR_INOUT_NEW}/../tstep/ms_w/ms_w.ctl ) || exit 1
 	if [ "${RESULT}" = "" ] ; then
