@@ -175,9 +175,15 @@ for KEY in ml_plev ; do
     for HGRID in ${HGRID_LIST[@]} ; do
 	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 	for TGRID in tstep ; do
-	    for DIR_INOUT in ../../${KEY}/${HGRID}x${PDEF}/${TGRID} ; do
-		[ -d ${DIR_INOUT} ] && DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
-	    done
+	    if [ ${PDEF} -eq 1 ] ; then
+		for DIR_INOUT in ../../${KEY}/${HGRID}_p${PDEF_LEVELS_RED[0]}/${TGRID} ; do
+		    [ -d ${DIR_INOUT} ] && DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
+		done
+	    else
+		for DIR_INOUT in ../../${KEY}/${HGRID}x${PDEF}/${TGRID} ; do
+		    [ -d ${DIR_INOUT} ] && DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
+		done
+	    fi
 	done
     done
 done
@@ -416,16 +422,24 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     PDEF=$( get_pdef ${PDEF_LEVELS_RED[0]} ) || exit 1
     for KEY in ${KEY_LIST[@]} ; do
 	for HGRID in ${HGRID_LIST[@]} ; do
-	    for DIR_IN in \
+	    TMP_LIST=( \
 		../../${KEY}/${HGRID}/tstep                \
 		../../${KEY}/${HGRID}x${ZDEF_NAT}/tstep    \
 		../../${KEY}/${HGRID}x${ZDEF_ISCCP}/tstep  \
 		../../${KEY}/${HGRID}x3/tstep              \
 		../../${KEY}/${HGRID}x49/tstep             \
-		../../${KEY}/${HGRID}x${PDEF}/tstep        \
 		../../${KEY}/${HGRID}/tstep/step4          \
 		../../${KEY}/${HGRID}/tstep/sta_tra        \
-		; do
+		)
+	    if [ ${PDEF} -eq 1 ] ; then
+		TMP_LIST=( ${TMP_LIST[@]} \
+		    ../../${KEY}/${HGRID}_p${PDEF_LEVELS_RED[0]}/${TGRID} )
+	    else
+		TMP_LIST=( ${TMP_LIST[@]} \
+		    ../../${KEY}/${HGRID}x${PDEF}/tstep )
+	    fi
+
+	    for DIR_IN in ${TMP_LIST[@]} ; do
 		[ -d ${DIR_IN} ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	    done
 	done
