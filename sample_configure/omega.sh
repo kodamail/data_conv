@@ -7,26 +7,17 @@
 OVERWRITE="no"
 
 #----- X/Y/Z/T/V -----#
-HGRID_LIST=( 144x72 288x145 zmean_72x37 zmean_145x37 )  # standard
+HGRID_LIST=( 144x72 zmean_72x37 )  # standard
 TGRID_LIST=( tstep monthly_mean )
 
-START_DATE=20040601 ; ENDPP_DATE=20040701
+#START_DATE=19780601 ; ENDPP_DATE=20090101
+START_DATE=19780601 ; ENDPP_DATE=19780605
 
 VARS=( \
     ms_pres \
     ms_tem  \
-    ms_u    \
-    ms_v    \
     ms_w    \
-    ms_rh   \
-    ms_qv   \
-    ms_qc   \
-    ms_qi   \
-    ms_qr   \
-    ms_qs   \
-    ms_qg   \
-    ms_lwhr \
-    ms_swhr \
+    ms_omega
     )
 
 VARS_TSTEP=( ${VARS[@]} )           # for tstep
