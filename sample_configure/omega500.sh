@@ -24,7 +24,7 @@ VARS_TSTEP=( ${VARS[@]} )           # for tstep
 VARS_TSTEP_1=( ${VARS_TSTEP[@]} )   # reduce_grid.sh
 VARS_TSTEP_2_1=( ${VARS_TSTEP[@]} ) # z2pre.sh (multi level)
 VARS_TSTEP_2_3=( ms_omega )         # plev_omega.sh
-#VARS_TSTEP_3=( ${VARS_TSTEP[@]} )   # zonal_mean.sh
+VARS_TSTEP_3=( ${VARS_TSTEP[@]} )   # zonal_mean.sh
 
 #----- pressure levels -----#
 #
