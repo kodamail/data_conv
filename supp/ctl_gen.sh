@@ -100,7 +100,8 @@ for VAR in ${VAR_LIST[@]} ; do
 	TDEF_TMP=$( ncdump -c ${DIR_FIRST}/${VAR}.nc \
 	    | sed -e '/data:/,/time =/p' -e d \
 	    | tail -n 1  \
-	    | sed -e "s/time =//" )
+	    | sed -e "s/time =//" \
+	    | sed -e "s/; *$//" )
 	
 	TDEF_UNITS=( $( ncdump -h ${DIR_FIRST}/${VAR}.nc \
 	    | grep "time:units" \
