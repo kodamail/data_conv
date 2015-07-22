@@ -1,33 +1,34 @@
 #!/bin/sh
 
-# usage: ./make.sh [ configure-1 configure-2 ... ]
+# usage: ./make.sh [ job-1 job-2 ... ]
 
-CONF_LIST=( )
+JOB_LIST=( )
 while [ -n "$1" ] ; do
-    CONF_LIST=( ${CONF_LIST[@]} $1 )
+    JOB_LIST=( ${JOB_LIST[@]} $1 )
     shift
 done
 
-if [ ${#CONF_LIST[@]} -eq 0 ] ; then
-    CONF_LIST=( $( ls configure/configure configure/configure.? configure/configure.?? 2> /dev/null ) )
+if [ ${#JOB_LIST[@]} -eq 0 ] ; then
+    echo "usage:"
+    echo "$0 job-1 job-2 ..."
+    exit
+#    JOB_LIST=( $( ls job/*.sh 2> /dev/null ) )
 fi
 
-
-for CONF in ${CONF_LIST[@]}
-do
+for JOB in ${JOB_LIST[@]} ; do
     echo "#======================================#"
     echo "#"
-    echo "# ${CONF} starts"
+    echo "# ${JOB} starts"
     echo "#"
     echo "#======================================#"
     echo ""
 
-    ./make_core.sh ${CONF} || exit 1
+    ./make_core.sh ${JOB} || exit 1
     
     echo ""
     echo "#======================================#"
     echo "#"
-    echo "# ${CONF} ends"
+    echo "# ${JOB} ends"
     echo "#"
     echo "#======================================#"
     echo ""
