@@ -47,23 +47,6 @@ echo "# Basic Analysis (tstep)"
 echo "#"
 echo "############################################################"
 echo "#"
-########## 0 ISCCP special ##########
-# to create 3-category tstep data
-#
-#
-#===== DAYS->TID not checked =====#
-#    DIR_IN=../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep
-#    DIR_OUT=../isccp/${XDEF_NAT}x${YDEF_NAT}x3/tstep
-#    VARS_TSTEP_ISCCP=( $( expand_vars ${#VARS_TSTEP_ISCCP[@]} ${VARS_TSTEP_ISCCP[@]} ) )
-#    VARS_TEMP=( ${VARS_TSTEP_ISCCP[@]} )
-##    [ "${VARS_TSTEP_ISCCP[0]}" = "ALL" ] && VARS_TEMP=( dfq_isccp2 )
-#    VARS_TEMP=( $( dep_var ${#VARS_TEMP[@]}  ${VARS_TEMP[@]} \
-#                           ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) )
-#    if [ "${VARS_TEMP[0]}" = "dfq_isccp2" ] ; then
-#	./isccp_3cat.sh ${DAYS} ${DIR_IN} ${DIR_OUT} \
-#	    ${OVERWRITE} || exit 1
-#    fi
-
 ########## 1. reduce grid ##########
 #
 DIR_IN_LIST=( \
@@ -265,7 +248,6 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
     done
 done
 
-
 #
 # vertical integral
 #
@@ -301,6 +283,50 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
     done
 done
 
+
+########## 2.9 ISCCP special ##########
+# to create 3-category tstep data
+#
+DIR_IN_LIST=( )
+#PDEF=$( get_pdef ${PDEF_LEVELS_RED[0]} ) || exit 1
+for KEY in isccp ; do
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
+	for TGRID in tstep ; do
+	    for DIR_INPUT in ../../${KEY}/${HGRID}x${ZDEF_ISCCP}/${TGRID} ; do
+		[ -d ${DIR_INPUT} ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_INPUT} )
+	    done
+	done
+    done
+done
+for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    [ ! -d ${DIR_IN} ] && continue
+    VARS_TSTEP_2_9=( $( expand_vars ${#VARS_TSTEP_2_9[@]} ${VARS_TSTEP_2_9[@]} ) )
+    VARS_TEMP=( ${VARS_TSTEP_2_9[@]} )
+    VARS_TEMP=( $( dep_var ${#VARS_TEMP[@]}  ${VARS_TEMP[@]} \
+	        ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) )
+    for VAR in ${VARS_TEMP[@]} ; do
+	[ "${VAR}" != "dfq_isccp2" ] && continue
+	#
+	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
+	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
+	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" )
+	#
+	DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=3 ) || exit 1
+
+	./isccp_3cat.sh ${START_DATE} ${ENDPP_DATE} \
+	    ${DIR_IN_NEW} ${DIR_OUT} \
+	    ${OVERWRITE} || exit 1
+	    
+	RESULT=$( diff ${DIR_IN_NEW}/${VAR}/${VAR}.ctl ${DIR_IN_NEW}/../tstep/${VAR}/${VAR}.ctl ) || exit 1
+	if [ "${RESULT}" = "" ] ; then
+	    mkdir -p ${DIR_OUT}/../tstep
+	    cd ${DIR_OUT}/../tstep
+	    [ ! -d ${VAR} -a ! -L ${VAR} ] && ln -s ../${PERIOD}/${VAR}
+	    cd - > /dev/null
+	fi
+    done
+done
 
 ########## 3. zonal mean ##########
 #
