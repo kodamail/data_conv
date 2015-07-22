@@ -1,11 +1,11 @@
 #!/bin/sh
-# create link for raw data
+# create link for NICAM data
 #
 # Before execution, check
 # -VAR="?l_*" and "dfq_isccp2" is snapshot or mean
 #
-. ./common.sh
-. ./usr/cnf_link.sh
+. ./common.sh       || exit 1
+. ./usr/cnf_link.sh || exit 1
 
 #----------------------------------------#
 CHSUB_BREAK_LIST=()
@@ -58,7 +58,6 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
 	OPT_NC=""
 	if [ "${EXT}" = "nc" ] ; then
-	    #INPUT_DATA=$( echo ${INPUT_DATA_TEMPLATE} | sed -e "s|%ch|${CHSUB_LIST[0]}|g" ) || exit 1
 	    INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB_LIST[0]}${INPUT_DATA_TEMPLATE_TAIL}
 	    OPT_NC="nc=${INPUT_DATA}"
 	fi

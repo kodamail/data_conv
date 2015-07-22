@@ -7,7 +7,6 @@
 # Note: Do not edit common.sh. The variables should be overwritten by usr/*.sh
 #
 
-
 BIN_GRADS_CTL=grads_ctl.pl
 BIN_DIFF_PATH=diff-path
 
