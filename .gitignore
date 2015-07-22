@@ -1,5 +1,5 @@
 *~
-configure/[^.]*
+job/
 log/
 temp_*/
-usr/[^.]*
+usr/
