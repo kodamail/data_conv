@@ -4,7 +4,7 @@
 # TODO: extend to stability, baroclinicity, etc for low-res data
 #
 . ./common.sh     || exit 1
-. ./usr/common.sh || exit 1
+#. ./usr/common.sh || exit 1
 
 echo "########## $0 start ##########"
 set -x
@@ -20,7 +20,8 @@ set +x
 echo "##########"
 
 create_temp
-trap "finish $0" 0
+TEMP_DIR=${BASH_COMMON_TEMP_DIR}
+trap "finish" 0
 
 if [   "${OVERWRITE}" != ""       \
     -a "${OVERWRITE}" != "yes"    \

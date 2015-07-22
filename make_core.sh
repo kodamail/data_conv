@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# flexible analysis system for NICAM output
+# Flexible analysis system for NICAM output
 #
 # TODO: combine TID(DAYS) and YEAR/MONTH -> DATE
 # TODO: support z->p for native grid (such as for gl06)
@@ -9,7 +9,7 @@
 # TODO: create land/sea mask from la_tg (undef -> ocean)
 #
 . ./common.sh     || exit 1
-. ./usr/common.sh || exit 1
+#. ./usr/common.sh || exit 1
 
 CONF=$1
 [ ! -f "${CONF}" ] && { echo "error: ${CONF} does not exist" ; exit 1 ; }

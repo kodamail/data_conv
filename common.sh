@@ -4,8 +4,10 @@
 #   create_temp
 #   trap "finish zonal_mean.sh" 0
 #
-# Note: Do not edit common.sh. The variables should be overwritten by usr/*.sh
+# Note: Do not edit common.sh. The variables can be overwritten by usr/*.sh
 #
+export LANG=en
+export F_UFMTENDIAN="big"
 
 BIN_GRADS_CTL=grads_ctl.pl
 BIN_DIFF_PATH=diff-path
@@ -16,36 +18,6 @@ BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 BIN_ZONAL_MEAN=zonal_mean
 
-export LANG=en
-export F_UFMTENDIAN="big"
-
-
-## directly of control files of raw data
-##DIR_RAW_CTL=../../data_1st/ctl
-#DIR_RAW_CTL=../../data_1st/ctl_nc
-#
-#REF_CTL=$( ls ${DIR_RAW_CTL}/m*_*.ctl 2> /dev/null | head -n 1 )
-#[ "${REF_CTL}" = "" ] && REF_CTL=$( ls ${DIR_RAW_CTL}/s*_*.ctl 2> /dev/null | head -n 1 )
-#[ "${REF_CTL}" = "" ] && REF_CTL=$( ls ${DIR_RAW_CTL}/l*_*.ctl 2> /dev/null | head -n 1 )
-#[ "${REF_CTL}" = "" ] && REF_CTL=$( ls ${DIR_RAW_CTL}/o*_*.ctl 2> /dev/null | head -n 1 )
-#[ "${REF_CTL}" = "" ] && REF_CTL=$( ls ${DIR_RAW_CTL}/dfq_isccp2.ctl 2> /dev/null | head -n 1 )
-#[ "${REF_CTL}" = "" ] && ( echo "error: no ctl file in ${DIR_RAW_CTL}" ; exit 1 )
-#
-#REF_NC=${REF_CTL%${REF_CTL##*/}}$( head -n 1 ${REF_CTL} | awk '{print $2}' | sed -e "s/^^//" | sed -e "s/%ch/$( grep CHSUB ${REF_CTL} | head -n 1 | awk '{print $4}' )/")
-#[ ! -f ${REF_NC} -o "${REF_NC}" = "${REF_NC%.nc}" ] && REF_NC=""
-#if [ "${REF_NC}" != "" ] ; then
-#    OPT_NC="nc=${REF_NC}"
-#else
-#    OPT_NC=""
-#fi
-
-# native grid
-#XDEF_NAT=$( ${BIN_GRADS_CTL} ctl=${REF_CTL} ${OPT_NC} key=XDEF target=NUM )
-#YDEF_NAT=$( ${BIN_GRADS_CTL} ctl=${REF_CTL} ${OPT_NC} key=YDEF target=NUM )
-#ZDEF_NAT=$( ${BIN_GRADS_CTL} ctl=${REF_CTL} ${OPT_NC} key=ZDEF target=NUM )
-#ZDEF_ISCCP=49
-
-
 # GrADS command and version
 GRADS_CMD="grads"
 GRADS_VER="2.0.a7.1"
@@ -53,36 +25,40 @@ GRADS_VER="2.0.a7.1"
 BIN_GRADS_CTL=grads_ctl.pl
 #BIN_GRADS_CTL=/cwork5/kodama/program/sh_lib/grads_ctl/dev/grads_ctl.pl
 
+. usr/common.sh
+#TEMP_DIR=${BASH_COMMON_TEMP_DIR}
+#echo ${TEMP_DIR}
+#exit 1
 
 # stdout and stderr logs
-if [ "${LOG_STDOUT}" = "" ] ; then
-    TEMP=$( date +%Y%m%d_%H%M%S )
-    LOG_STDOUT=log/stdout_${TEMP}
-    LOG_STDERR=log/stderr_${TEMP}
-fi
+#if [ "${LOG_STDOUT}" = "" ] ; then
+#    TEMP=$( date +%Y%m%d_%H%M%S )
+#    LOG_STDOUT=log/stdout_${TEMP}
+#    LOG_STDERR=log/stderr_${TEMP}
+#fi
 
-TEMP_DIR=""
-ORG_DIR=$( pwd )
-function create_temp()
-{
-    local TEMP
-    for(( i=1; $i<=10; i=$i+1 )) ; do
-        TEMP=$( date +%s )
-        TEMP_DIR=temp_${TEMP}
-        [ ! -d ${TEMP_DIR} ] && break
-        sleep 1s
-    done
-    mkdir ${TEMP_DIR}
-}
-
-function finish()
-{
-    local SH=$1
-    cd ${ORG_DIR}
-    rm -r ${TEMP_DIR}
-    echo "########## ${SH} finish ##########"
-    echo ""
-}
+#TEMP_DIR=""
+#ORG_DIR=$( pwd )
+#function create_temp()
+#{
+#    local TEMP
+#    for(( i=1; $i<=10; i=$i+1 )) ; do
+#        TEMP=$( date +%s )
+#        TEMP_DIR=temp_${TEMP}
+#        [ ! -d ${TEMP_DIR} ] && break
+#       sleep 1s
+#    done
+#    mkdir ${TEMP_DIR}
+#}
+#
+#function finish()
+#{
+#    local SH=$1
+#    cd ${ORG_DIR}
+#    rm -r ${TEMP_DIR}
+#    echo "########## ${SH} finish ##########"
+#    echo ""
+#}
 
 
 # convert ${TAG}/${HORIZONTAL}/${TIME} 
