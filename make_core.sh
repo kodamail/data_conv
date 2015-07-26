@@ -9,22 +9,16 @@
 # TODO: create land/sea mask from la_tg (undef -> ocean)
 #
 . ./common.sh     || exit 1
-#. ./usr/common.sh || exit 1
 
-CONF=$1
-[ ! -f "${CONF}" ] && { echo "error: ${CONF} does not exist" ; exit 1 ; }
+JOB=$1
+[ ! -f "${JOB}" ] && { echo "error: ${JOB} does not exist" ; exit 1 ; }
 
-### comment out if you use log file instead of displaying.
-###LOG_STDOUT=/dev/stdout
-###LOG_STDERR=/dev/stderr
-
-echo "make_core.sh start" # 1>> ${LOG_STDOUT} 2>> ${LOG_STDERR}
-date                      # 1>> ${LOG_STDOUT} 2>> ${LOG_STDERR}
+echo "$0 start"
+date
 #############################################################
-# configure
+# load job
 #############################################################
-. ${CONF}
-KEY_LIST=( isccp ll ml_zlev ml_plev ol sl advanced/cosp_v1.3 advanced/MIM-0.36r2 )
+. ${JOB}
 
 #############################################################
 # Expand VARS
@@ -38,9 +32,6 @@ VARS_TSTEP=( $( expand_vars ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) )
 VARS_TSTEP=( $( dep_var ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} \
                         ${#VARS[@]}       ${VARS[@]} ) )
 
-#for DAYS in ${DAYS_LIST_TSTEP[@]} ; do
-#for TID in ${TID_LIST_TSTEP[@]} ; do
-
 echo "############################################################"
 echo "#"
 echo "# Basic Analysis (tstep)"
@@ -51,12 +42,12 @@ echo "#"
 #
 DIR_IN_LIST=( \
     ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep \
-    ../../isccp/${XDEF_NAT}x${YDEF_NAT}x3/tstep \
-    ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep \
+    ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  \
     ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep \
-    ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep \
-    ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep \
+    ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  \
+    ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  \
     )
+#    ../../isccp/${XDEF_NAT}x${YDEF_NAT}x3/tstep \
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
     [ ! -d ${DIR_IN} ] && continue
     #
@@ -65,7 +56,6 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
     VARS_TEMP=( $( dep_var ${#VARS_TEMP[@]}  ${VARS_TEMP[@]} \
 	        ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]}) )
 
-    #echo "${VARS_TEMP[@]}"
     for VAR in ${VARS_TEMP[@]} ; do
 	VAR_CHILD=$( ls --color=never ${DIR_IN} 2>/dev/null | grep ^${VAR}$ )
 	[ "${VAR_CHILD}" != "${VAR}" ] && continue
@@ -606,119 +596,6 @@ done
 #	done
 #    done
 #fi
-
-
-
-#############################################################
-#
-# Advanced Analysis (time depends on analysis)
-#
-#############################################################
-VARS_ADV=( $( expand_vars ${#VARS_ADV[@]} ${VARS_ADV[@]} ) )
-VARS_ADV=( $( dep_var ${#VARS_ADV[@]} ${VARS_ADV[@]} \
-                      ${#VARS[@]}     ${VARS[@]} ) )
-#for DAYS in ${DAYS_LIST_ADV[@]} ; do
-#for TID in ${TID_LIST_ADV[@]} ; do
-echo "############################################################"
-echo "# Advanced Analysis"
-echo "#   TID = ${TID}"
-echo "############################################################"
-echo "#"
-for VAR in ${VARS_ADV[@]} ; do
-
-    ########## COSP ##########
-    #
-    if [ "${VAR}" = "cosp" ] ; then
-	DIR_IN_ML=../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep
-	DIR_IN_SL=../sl/${XDEF_NAT}x${YDEF_NAT}/3hr_tstep
-	TOPOG=../../used_database/topog/${XDEF_NAT}x${YDEF_NAT}/topog2.grd
-	VGRID_TXT=../../used_database/vgrid/vgrid40.txt
-	DIR_OUT=../advanced/cosp_v1.3/${XDEF_NAT}x${YDEF_NAT}/tstep/step4
-	STEP=$( echo "${XDEF_NAT} / 640" | bc )
-	./advanced/cosp_v1.3.sh ${START_DATE} ${ENDPP_DATE} \
-	    ${DIR_IN_ML} ${DIR_IN_SL} ${TOPOG} ${VGRID_TXT} ${DIR_OUT} \
-	    ${STEP} ${OVERWRITE} || exit 1
-	
-	./advanced/cosp_v1.3_rs_radarcld.sh ${START_DATE} ${ENDPP_DATE} \
-	    ${DIR_OUT} 30 ${OVERWRITE} || exit 1
-    fi
-    
-
-    ########## pdf ##########
-    #
-    if [ "${VAR}" = "pdf_5dy" ] ; then
-	./advanced/pdf.sh 5dy_mean ${DAYS} ${OVERWRITE} || exit 1
-    fi
-
-    ########## MIM ##########
-    #
-    if [ "${VAR}" = "mim" ] ; then
-	MIM="MIM-0.36r2"
-	./advanced/mim_ps.sh ${START_DATE} ${ENDPP_DATE} \
-	    ../ml_zlev/144x72x38/tstep \
-	    ../advanced/MIM_ps/144x72/tstep \
-	    ${PDEF_LEVELS_RED[0]} \
-	    ${OVERWRITE} || exit 1
-
-	./advanced/mim.sh ${MIM} ${START_DATE} ${ENDPP_DATE} \
-	    ../ml_plev/144x72x18/tstep \
-	    ../sl/144x72/6hr_tstep \
-	    ../advanced/${MIM}/zmean_72x18/tstep/sta_tra \
-	    ${PDEF_LEVELS_RED[0]} \
-	    ${OVERWRITE} || exit 1
-
-    fi
-
-    ########## rain_from_cloud ##########
-    #
-    if [ "${VAR}" = "rain_from_cloud" ] ; then
-	./advanced/rain_from_cloud.sh ${DAYS} \
-	    ../sl/2560x1280/3hr_tstep \
-	    ../isccp/2560x1280x49/tstep \
-	    ../advanced/rain_from_cloud/2560x1280/tstep \
-	    ${OVERWRITE} || exit 1
-    fi
-    
-    ########## cloud_cape ##########
-    #
-    if [ "${VAR}" = "cloud_cape" ] ; then
-	./advanced/cloud_cape/cloud_cape.sh ${DAYS} \
-	    ${OVERWRITE} || exit 1
-    fi
-    
-done
-
-exit
-
-
-#
-YEAR=${START_YEAR_ADV}
-MONTH=${START_MONTH_ADV}
-while [ ${YEAR} = ${YEAR} -a "${VARS_ADV[0]}" != "" ] ; do
-    echo "############################################################"
-    echo "# Advanced Analysis"
-    echo "#   YM = ${YEAR}/${MONTH}"
-    echo "############################################################"
-    echo "#"
-    for VAR in ${VARS_ADV[@]} ; do
-
-        ########## pdf ##########
-	#
-	if [ "${VAR}" = "pdf_monthly" ] ; then
-	    ./advanced/pdf.sh monthly_mean ${YEAR} ${MONTH} ${OVERWRITE} || exit 1
-	fi
-
-    done
-
-    # loop end
-    [ ${YEAR} = ${END_YEAR} -a ${MONTH} = ${END_MONTH} ] && break
-    MONTH=$( expr ${MONTH} + 1 ) || exit 1
-    if [ ${MONTH} = 13 ] ; then
-	MONTH=1
-	YEAR=$( expr ${YEAR} + 1 ) || exit 1
-    fi
-done
-
 
 echo "$0 normally finished"
 date
