@@ -1,7 +1,6 @@
 #!/bin/sh
 #
 . ./common.sh     || exit 1
-#. ./usr/common.sh || exit 1
 
 echo "########## $0 start ##########"
 set -x
@@ -17,7 +16,6 @@ echo "##########"
 create_temp
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}
 trap "finish" 0
-#trap "finish $0" 0
 
 if [   "${OVERWRITE}" != ""       \
     -a "${OVERWRITE}" != "yes"    \
@@ -68,23 +66,18 @@ for VAR in ${VAR_LIST[@]} ; do
     fi
     EXT=grd
     TMP=$( echo "${FLAG[1]}" | grep ".nc$" )
-    OPT_NC=""
     if [ "${TMP}" != "" ] ; then
 	EXT=nc
 	INPUT_NC_1=${FLAG[1]}
-	OPT_NC="nc=${FLAG[1]}"
     fi
     #
     # get number of grid
     #
-    XDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=XDEF target=NUM ) || exit 1
-    YDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=YDEF target=NUM ) || exit 1
-    ZDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=ZDEF target=NUM ) || exit 1
-    EDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=EDEF target=NUM ) || exit 1
-    TDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=NUM ) || exit 1
-    TDEF_START=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=1 ) || exit 1
-    TDEF_INCRE_SEC=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=SEC | sed -e "s/SEC//" ) || exit 1
-    TDEF_INCRE_MN=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=MN | sed -e "s/MN//" ) || exit 1
+    DIMS=( $( ${BIN_GRADS_CTL} ${INPUT_CTL} DIMS NUM ) ) || exit 1
+    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
+    TDEF_START=$(     ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF 1 ) || exit 1
+    TDEF_INCRE_SEC=$( ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit SEC | sed -e "s/SEC//" ) || exit 1
+    TDEF_INCRE_MN=$(  ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit MN  | sed -e "s/MN//"  ) || exit 1
     #
     OUTPUT_TDEF_ONEFILE=$( echo "60 * 60 * 24 / ${TDEF_INCRE_SEC}" | bc ) || exit 1   # per one file
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
@@ -220,9 +213,6 @@ for VAR in ${VAR_LIST[@]} ; do
 
 done
 
-if [ ${NOTHING} -eq 1 ] ; then
-    echo "info: nothing to do"
-#    echo "##########"
-fi
+[ ${NOTHING} -eq 1 ] && echo "info: nothing to do"
 
 echo "$0 normally finished"
