@@ -22,8 +22,12 @@ BIN_ZONAL_MEAN=zonal_mean
 GRADS_CMD="grads"
 GRADS_VER="2.0.a7.1"
 
-BIN_GRADS_CTL=grads_ctl.pl
+#BIN_GRADS_CTL=grads_ctl2.pl
+#BIN_GRADS_CTL=grads_ctl.pl
 #BIN_GRADS_CTL=/cwork5/kodama/program/sh_lib/grads_ctl/dev/grads_ctl.pl
+
+KEY_LIST=( isccp ll ml_zlev ml_plev ol sl )
+
 
 . usr/common.sh
 #TEMP_DIR=${BASH_COMMON_TEMP_DIR}
@@ -69,40 +73,45 @@ function conv_dir()
     local CNTL=$2
     local TARGET=$( echo ${CNTL} | cut -d = -f 1 )
     local VALUE=$( echo ${CNTL} | cut -d = -f 2 )
-    local TAG_LIST=( advanced isccp ll ml_plev ml_zlev ol sl )
+#    local TAG_LIST=( advanced isccp ll ml_plev ml_zlev ol sl )
     local TDEF_LIST=( tstep 1dy_mean monthly_mean )
 
     if [ "${TARGET}" = "XDEF" -a ${VALUE} = "ZMEAN" ] ; then
-	for TAG in ${TAG_LIST[@]} ; do
+#	for TAG in ${TAG_LIST[@]} ; do
+	for KEY in ${KEY_LIST[@]} ; do
 #	  DIR=`echo ${DIR} | sed -e "s|${TAG}/[0-9][0-9]*x\([0-9][0-9]*\)/|${TAG}/zmean_\1/|"`
 #	  DIR=`echo ${DIR} | sed -e "s|${TAG}/[0-9][0-9]*x\([0-9][0-9]*x[0-9][0-9]*\)/|${TAG}/zmean_\1/|"`
 #
 	  # 320x160x18   -> zmean_160x18
 	  # 320x160      -> zmean_160
 	  # 320x160_p850 -> zmean_160_p850
-	  DIR=$( echo ${DIR} | sed -e "s|${TAG}/[0-9][0-9]*x|${TAG}/zmean_|" )
+	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/zmean_|" )
 #	  continue
 	done
 
     elif [ "${TARGET}" = "XYDEF" ] ; then
-	for TAG in ${TAG_LIST[@]} ; do
-	  DIR=$( echo ${DIR} | sed -e "s|${TAG}/[0-9][0-9]*x[0-9][0-9]*/|${TAG}/${VALUE}/|" )
-	  DIR=$( echo ${DIR} | sed -e "s|${TAG}/[0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)/|${TAG}/${VALUE}\1/|" )
+#	for TAG in ${TAG_LIST[@]} ; do
+	for KEY in ${KEY_LIST[@]} ; do
+	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x[0-9][0-9]*/|${KEY}/${VALUE}/|" )
+	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)/|${KEY}/${VALUE}\1/|" )
 	done
 
     elif [ "${TARGET}" = "ZDEF" ] ; then
-	for TAG in ${TAG_LIST[@]} ; do
-	    DIR=$( echo ${DIR} | sed -e "s|${TAG}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${TAG}/\1x${VALUE}/|" )
+#	for TAG in ${TAG_LIST[@]} ; do
+	for KEY in ${KEY_LIST[@]} ; do
+	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${KEY}/\1x${VALUE}/|" )
 	done
 
     elif [ "${TARGET}" = "ZLEV" ] ; then
-	for TAG in ${TAG_LIST[@]} ; do
-	    DIR=$( echo ${DIR} | sed -e "s|${TAG}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${TAG}/\1_p${VALUE}/|" )
+#	for TAG in ${TAG_LIST[@]} ; do
+	for KEY in ${KEY_LIST[@]} ; do
+	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${KEY}/\1_p${VALUE}/|" )
 	done
 
     elif [ "${TARGET}" = "TAG" ] ; then
-	for TAG in ${TAG_LIST[@]} ; do
-	    DIR=$( echo ${DIR} | sed -e "s|${TAG}/\([0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)\)*/|${VALUE}/\1/|" )
+#	for TAG in ${TAG_LIST[@]} ; do
+	for KEY in ${KEY_LIST[@]} ; do
+	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)\)*/|${VALUE}/\1/|" )
 	done
 
     elif [ "${TARGET}" = "TDEF" ] ; then
@@ -183,7 +192,7 @@ function expand_vars()
 	      ms_omega ms_z )
     VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
+#    VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
     VARS_ALL=(   ${VARS_ISCCP[@]} ${VARS_LL[@]} ${VARS_ML[@]} ${VARS_OL[@]} ${VARS_SL[@]} \
 	         ${VARS_ADV[@]} )
 
@@ -199,8 +208,8 @@ function expand_vars()
 	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_OL[@]} )
 	elif [ "${VAR}" = "isccp" ] ; then
 	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ISCCP[@]} )
-	elif [ "${VAR}" = "ADV" ] ; then
-	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ADV[@]}  )
+#	elif [ "${VAR}" = "ADV" ] ; then
+#	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ADV[@]}  )
 	elif [ "${VAR}" = "ALL" ] ; then
 	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ALL[@]}  )
 	else
@@ -248,8 +257,11 @@ function tstep_2_period()
     local CTL=$1
     local VAR=${CTL##*/}
     local VAR=${VAR%.ctl}
-    local TDEF_INCRE_HR=$( grads_ctl.pl ctl=${CTL} key=TDEF target=STEP unit=HR | sed -e "s/HR$//" )
-    local TDEF_INCRE_DY=$( grads_ctl.pl ctl=${CTL} key=TDEF target=STEP unit=DY | sed -e "s/DY$//" )
+#    local TDEF_INCRE_HR=$( grads_ctl.pl ctl=${CTL} key=TDEF target=STEP unit=HR | sed -e "s/HR$//" )
+#    local TDEF_INCRE_DY=$( grads_ctl.pl ctl=${CTL} key=TDEF target=STEP unit=DY | sed -e "s/DY$//" )
+    local TDEF_INCRE_HR=$( ${BIN_GRADS_CTL} ${CTL} TDEF --target INC --unit HR | sed -e "s/HR$//" )
+    local TDEF_INCRE_DY=$( ${BIN_GRADS_CTL} ${CTL} TDEF --target INC --unit DY | sed -e "s/DY$//" )
+
     if [ ${TDEF_INCRE_HR} -lt 24 ] ; then
 	PERIOD="${TDEF_INCRE_HR}hr"
     else

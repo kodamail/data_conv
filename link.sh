@@ -56,21 +56,25 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 
 	# dimension
 	CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
-	OPT_NC=""
-	if [ "${EXT}" = "nc" ] ; then
-	    INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB_LIST[0]}${INPUT_DATA_TEMPLATE_TAIL}
-	    OPT_NC="nc=${INPUT_DATA}"
-	fi
-	XDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=XDEF target=NUM ) || exit 1
-	YDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=YDEF target=NUM ) || exit 1
-	ZDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=ZDEF target=NUM ) || exit 1
+#	OPT_NC=""
+#	if [ "${EXT}" = "nc" ] ; then
+#	    INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB_LIST[0]}${INPUT_DATA_TEMPLATE_TAIL}
+#	    OPT_NC="nc=${INPUT_DATA}"
+#	fi
+#	XDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=XDEF target=NUM ) || exit 1
+#	YDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=YDEF target=NUM ) || exit 1
+#	ZDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=ZDEF target=NUM ) || exit 1
+        DIMS=( $( ${BIN_GRADS_CTL} ${INPUT_CTL} DIMS NUM ) ) || exit 1
+	XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
 	[ "${ZDEF}" = "0" ] && ZDEF=1
 
 	if [ "${INPUT_TIME}" = "monthly_mean" ] ; then
 	    PERIOD="monthly_mean"
 	else
-	    TDEF_INCRE_HR=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=HR | sed -e "s|HR$||" ) || exit 1
-	    TDEF_INCRE_DY=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=DY | sed -e "s|DY$||" ) || exit 1
+#	    TDEF_INCRE_HR=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=HR | sed -e "s|HR$||" ) || exit 1
+#	    TDEF_INCRE_DY=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=DY | sed -e "s|DY$||" ) || exit 1
+	    TDEF_INCRE_HR=$( ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit HR | sed -e "s|HR$||" ) || exit 1
+	    TDEF_INCRE_DY=$( ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit DY | sed -e "s|DY$||" ) || exit 1
 	    if [ ${TDEF_INCRE_HR} -lt 24 ] ; then
 		PERIOD="${TDEF_INCRE_HR}hr"
 	    else
