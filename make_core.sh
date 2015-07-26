@@ -306,9 +306,6 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" )
 	#
 	DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=3 ) || exit 1
-echo ${DIR_IN_NEW}
-echo ${DIR_OUT}
-exit 1
 	./isccp_3cat.sh ${START_DATE} ${ENDPP_DATE} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${OVERWRITE} || exit 1
@@ -479,15 +476,11 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 		./monthly_mean3.sh ${START_DATE} ${ENDPP_DATE} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${OVERWRITE} ${VAR} || exit 1
-#		./monthly_mean2.sh ${START_DATE} ${ENDPP_DATE} \
-#		    ${DIR_IN} ${DIR_OUT} \
-#		    ${OVERWRITE} ${VAR} || exit 1
 	    else
-#		./multi_step2.sh ${START_DATE} ${ENDPP_DATE} \
-#		    ${DIR_IN} ${DIR_OUT} \
-#		    ${PERIOD} ${OVERWRITE} ${VAR} || exit 1
 		SA=
 		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
+		echo "error! multi_step3.sh should be re-written!"
+		exit 1
 		./multi_step3.sh ${START_DATE} ${ENDPP_DATE} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${PERIOD} ${OVERWRITE} ${VAR} ${SA} || exit 1
@@ -544,6 +537,8 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    [ "${VAR_CHILD}" != "${VAR}" ] && continue
 	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 
+	    echo "error! daily_clim.sh should be re-written!"
+	    exit 1
 	    ./daily_clim.sh ${START_DATE} ${ENDPP_DATE} \
 		${DIR_IN} ${DIR_OUT} \
 		${OVERWRITE} ${VAR} || exit 1
