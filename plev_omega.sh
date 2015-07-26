@@ -85,14 +85,19 @@ for VAR in m${TYPE}_omega ; do
     #
     # get number of grid
     #
-    XDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=XDEF target=NUM )
-    YDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=YDEF target=NUM )
-    ZDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=ZDEF target=NUM )
-    EDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=EDEF target=NUM )
-    TDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=NUM )
-    TDEF_START=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=1 )
-    TDEF_INCRE_SEC=$( grads_ctl.pl ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=STEP unit=SEC | sed -e "s/SEC//" )
-    TDEF_INCRE_MN=$( grads_ctl.pl ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=STEP unit=MN | sed -e "s/MN//" )
+    DIMS=( $( ${BIN_GRADS_CTL} ${INPUT_W_CTL} DIMS NUM ) ) || exit 1
+    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
+    TDEF_START=$(     ${BIN_GRADS_CTL} ${INPUT_W_CTL} TDEF 1 ) || exit 1
+    TDEF_INCRE_SEC=$( ${BIN_GRADS_CTL} ${INPUT_W_CTL} TDEF INC --unit SEC | sed -e "s/SEC//" ) || exit 1
+    TDEF_INCRE_MN=$(  ${BIN_GRADS_CTL} ${INPUT_W_CTL} TDEF INC --unit MN  | sed -e "s/MN//"  ) || exit 1
+#    XDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=XDEF target=NUM )
+#    YDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=YDEF target=NUM )
+#    ZDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=ZDEF target=NUM )
+#    EDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=EDEF target=NUM )
+#    TDEF=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=NUM )
+#    TDEF_START=$( ${BIN_GRADS_CTL} ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=1 )
+#    TDEF_INCRE_SEC=$( grads_ctl.pl ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=STEP unit=SEC | sed -e "s/SEC//" )
+#    TDEF_INCRE_MN=$( grads_ctl.pl ctl=${INPUT_W_CTL} ${OPT_NC} key=TDEF target=STEP unit=MN | sed -e "s/MN//" )
 
     OUTPUT_TDEF_ONEFILE=$( echo "60 * 60 * 24 / ${TDEF_INCRE_SEC}" | bc )   # per one file
     OUTPUT_CTL=${INOUT_DIR}/${VAR}/${VAR}.ctl

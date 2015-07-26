@@ -224,6 +224,8 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	else
 	    DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || exit 1
 	fi
+	echo "error! plev_z.sh should be re-written!"
+	exit 1
 	./plev_z.sh ${START_DATE} ${ENDPP_DATE} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${PDEF_LEVELS_RED[0]} ms_pres ${OVERWRITE} || exit 1
@@ -265,7 +267,8 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	DIR_OUT=$( echo "${DIR_IN}" \
 	    | sed -e "s/ml_zlev/sl/" -e "s/\([0-9]\+x[0-9]\+\)x[0-9]\+/\1/" -e "s/tstep/${PERIOD}/")
 	DIR_SL_IN=${DIR_OUT}
-	
+	echo "error! vint.sh should be re-written!"
+	exit 1
 	./vint.sh ${START_DATE} ${ENDPP_DATE} \
 	    ${DIR_IN} ${DIR_SL_IN} \
 	    ${DIR_OUT} \
@@ -303,7 +306,9 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" )
 	#
 	DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=3 ) || exit 1
-
+echo ${DIR_IN_NEW}
+echo ${DIR_OUT}
+exit 1
 	./isccp_3cat.sh ${START_DATE} ${ENDPP_DATE} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${OVERWRITE} || exit 1

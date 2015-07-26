@@ -259,8 +259,8 @@ function tstep_2_period()
     local VAR=${VAR%.ctl}
 #    local TDEF_INCRE_HR=$( grads_ctl.pl ctl=${CTL} key=TDEF target=STEP unit=HR | sed -e "s/HR$//" )
 #    local TDEF_INCRE_DY=$( grads_ctl.pl ctl=${CTL} key=TDEF target=STEP unit=DY | sed -e "s/DY$//" )
-    local TDEF_INCRE_HR=$( ${BIN_GRADS_CTL} ${CTL} TDEF --target INC --unit HR | sed -e "s/HR$//" )
-    local TDEF_INCRE_DY=$( ${BIN_GRADS_CTL} ${CTL} TDEF --target INC --unit DY | sed -e "s/DY$//" )
+    local TDEF_INCRE_HR=$( ${BIN_GRADS_CTL} ${CTL} TDEF INC --unit HR | sed -e "s/HR$//" )
+    local TDEF_INCRE_DY=$( ${BIN_GRADS_CTL} ${CTL} TDEF INC --unit DY | sed -e "s/DY$//" )
 
     if [ ${TDEF_INCRE_HR} -lt 24 ] ; then
 	PERIOD="${TDEF_INCRE_HR}hr"

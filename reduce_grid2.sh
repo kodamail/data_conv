@@ -1,7 +1,6 @@
 #!/bin/sh
 #
 . ./common.sh     || exit 1
-#. ./usr/common.sh || exit 1
 
 echo "########## $0 start ##########"
 set -x
@@ -77,16 +76,20 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     # get number of grid
     #
-    XDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=XDEF target=NUM )
-    YDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=YDEF target=NUM )
-    ZDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=ZDEF target=NUM )
+    DIMS=( $( ${BIN_GRADS_CTL} ${INPUT_CTL} DIMS NUM ) ) || exit 1
+    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
+#    XDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=XDEF target=NUM )
+#    YDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=YDEF target=NUM )
+#    ZDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=ZDEF target=NUM )
     #EDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=EDEF target=NUM )
-    TDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=NUM )
-    TDEF_START=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=1 )
-    #TDEF_START=$( grep -i "^TDEF" ${INPUT_CTL} | awk '{ print $4 }' )
-    TDEF_INCRE_SEC=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=SEC | sed -e "s/SEC//" )
-    TDEF_INCRE_MN=$(  grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=MN | sed -e "s/MN//" )
-
+#    TDEF=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=NUM )
+#    TDEF_START=$( ${BIN_GRADS_CTL} ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=1 )
+#    #TDEF_START=$( grep -i "^TDEF" ${INPUT_CTL} | awk '{ print $4 }' )
+#    TDEF_INCRE_SEC=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=SEC | sed -e "s/SEC//" )
+#    TDEF_INCRE_MN=$(  grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=MN | sed -e "s/MN//" )
+    TDEF_START=$(     ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF 1 )
+    TDEF_INCRE_SEC=$( ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit SEC | sed -e "s/SEC//" )
+    TDEF_INCRE_MN=$(  ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit MN  | sed -e "s/MN//" )
     #
     XDEF_OUT=$( echo ${XYDEF} | cut -d x -f 1 )
     YDEF_OUT=$( echo ${XYDEF} | cut -d x -f 2 )
