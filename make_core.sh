@@ -1,8 +1,7 @@
 #!/bin/sh
 #
-# Flexible analysis system for NICAM output
+# Flexible analysis system for NICAM (and various type of) output
 #
-# TODO: combine TID(DAYS) and YEAR/MONTH -> DATE
 # TODO: support z->p for native grid (such as for gl06)
 # TODO: complex configure (e.g. using namelist-like syntax)
 # TODO: when monthly-mean or zonal-mean, if most (>90%) of the values are undef, then the resulting mean value should be set to undef, like legacy data_conv
@@ -11,9 +10,9 @@
 . ./common.sh     || exit 1
 
 JOB=$1
-[ ! -f "${JOB}" ] && { echo "error: ${JOB} does not exist" ; exit 1 ; }
+[ ! -f "${JOB}" ] && { echo "error: ${JOB} does not exist." ; exit 1 ; }
 
-echo "$0 start"
+echo "$0 started."
 date
 #############################################################
 # load job
@@ -597,5 +596,5 @@ done
 #    done
 #fi
 
-echo "$0 normally finished"
+echo "$0 normally finished."
 date

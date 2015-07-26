@@ -18,7 +18,7 @@ fi
 for JOB in ${JOB_LIST[@]} ; do
     echo "#======================================#"
     echo "#"
-    echo "# ${JOB} starts"
+    echo "# ${JOB} starts."
     echo "#"
     echo "#======================================#"
     echo ""
@@ -28,10 +28,10 @@ for JOB in ${JOB_LIST[@]} ; do
     echo ""
     echo "#======================================#"
     echo "#"
-    echo "# ${JOB} ends"
+    echo "# ${JOB} ends."
     echo "#"
     echo "#======================================#"
     echo ""
 done
 
-echo "$0 normally finished"
+echo "$0 normally finished."

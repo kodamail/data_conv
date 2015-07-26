@@ -22,7 +22,7 @@ if [   "${OVERWRITE}" != ""       \
     -a "${OVERWRITE}" != "no"     \
     -a "${OVERWRITE}" != "dry-rm" \
     -a "${OVERWRITE}" != "rm"  ] ; then
-    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet"
+    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet."
     exit 1
 fi
 
@@ -42,16 +42,30 @@ for VAR in ${VAR_LIST[@]} ; do
     # check output dir
     #
     if [ -f "${OUTPUT_DIR}/${VAR}/_locked" ] ; then
-	echo "info: ${OUTPUT_DIR} is locked"
+	echo "info: ${OUTPUT_DIR} is locked."
 	continue
+    fi
+    #
+    # check output data
+    #
+    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
+    if [ -f ${OUTPUT_CTL} ] ; then
+	FLAG=( $( exist_data.sh \
+	    ${OUTPUT_CTL} \
+	    $( time_2_grads ${START_DATE} ) \
+	    $( time_2_grads ${ENDPP_DATE} ) \
+	    "PP" ) ) || exit 1
+	if [ "${FLAG[0]}" = "ok" ] ; then
+	    echo "info: Output data already exist."
+	    continue
+	fi
     fi
     #
     # check input data
     #
     INPUT_CTL=${INPUT_DIR}/${VAR}/${VAR}.ctl
     if [ ! -f ${INPUT_CTL} ] ; then
-	echo "warning: ${INPUT_CTL} does not exist"
-	#echo "##########"
+	echo "warning: ${INPUT_CTL} does not exist."
 	continue
     fi
     FLAG=( $( exist_data.sh \
@@ -60,8 +74,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	$( time_2_grads ${ENDPP_DATE} ) \
 	"PP" ) ) || exit 1
     if [ "${FLAG[0]}" != "ok" ] ; then
-	echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})"
-	#echo "##########" 
+	echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
 	continue
     fi
     EXT=grd
@@ -80,7 +93,6 @@ for VAR in ${VAR_LIST[@]} ; do
     TDEF_INCRE_MN=$(  ${BIN_GRADS_CTL} ${INPUT_CTL} TDEF INC --unit MN  | sed -e "s/MN//"  ) || exit 1
     #
     OUTPUT_TDEF_ONEFILE=$( echo "60 * 60 * 24 / ${TDEF_INCRE_SEC}" | bc ) || exit 1   # per one file
-    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
     [ ! -d ${OUTPUT_DIR}/${VAR}     ] && mkdir -p ${OUTPUT_DIR}/${VAR}
     [ ! -d ${OUTPUT_DIR}/${VAR}/log ] && mkdir -p ${OUTPUT_DIR}/${VAR}/log
     #
@@ -91,8 +103,6 @@ for VAR in ${VAR_LIST[@]} ; do
     else
 	cp ${INPUT_CTL} ${OUTPUT_CTL}.tmp1
     fi
-    #
-    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
     #
     rm -f ${OUTPUT_CTL}.chsub
     for(( d=1; ${d}<=${TDEF}; d=${d}+${OUTPUT_TDEF_ONEFILE} )) ; do
@@ -136,7 +146,6 @@ for VAR in ${VAR_LIST[@]} ; do
 	if [ ${d} -eq 1 ] ; then
 	    DATE_GRADS=${TDEF_START}
 	else
-	    #DATE_GRADS=$( date -u --date "${DATE_GRADS} 1 days" +%H:%Mz%d%b%Y )
 	    for(( dd=1; ${dd}<=${OUTPUT_TDEF_ONEFILE}; dd=${dd}+1 )) ; do
 		DATE_GRADS=$( date -u --date "${DATE_GRADS} ${TDEF_INCRE_SEC} seconds" +%H:%Mz%d%b%Y ) || exit 1
 	    done
@@ -155,9 +164,6 @@ for VAR in ${VAR_LIST[@]} ; do
 	YEAR=${DATE:0:4}
 	MONTH=${DATE:4:2}
 	DAY=${DATE:6:2}
-	#YEAR=$(  echo ${DATE} | cut -c 1-4 )
-	#MONTH=$( echo ${DATE} | cut -c 5-6 )
-	#DAY=$(   echo ${DATE} | cut -c 7-8 )
 	#
 	TMIN=${d}
 	TMAX=$( echo "${d}+${OUTPUT_TDEF_ONEFILE}-1" | bc ) || exit 1
@@ -184,7 +190,7 @@ for VAR in ${VAR_LIST[@]} ; do
 		-a "${OVERWRITE}" != "rm" ] ; then
 		continue 1
 	    fi
-	    echo "Removing ${OUTPUT_DATA}"
+	    echo "Removing ${OUTPUT_DATA}."
 	    echo ""
 	    [ "${OVERWRITE}" = "dry-rm" ] && continue 1
 	    rm -f ${OUTPUT_DATA}
@@ -213,6 +219,6 @@ for VAR in ${VAR_LIST[@]} ; do
 
 done
 
-[ ${NOTHING} -eq 1 ] && echo "info: nothing to do"
+[ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 
-echo "$0 normally finished"
+echo "$0 normally finished."

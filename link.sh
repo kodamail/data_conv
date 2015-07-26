@@ -38,7 +38,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	elif [ "${VAR}" = "dfq_isccp2" ] ; then
 	    TAG="isccp"
 	else
-	    echo "${VAR} is not supported"
+	    echo "${VAR} is not supported."
 	    echo "skip!"
 	    continue
 	fi
@@ -86,7 +86,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    elif [ "${SA}" = "s" -o "${SA}" = "l" ] ; then  # snapshot
 		PERIOD="${PERIOD}_tstep"
 	    else
-		echo "error in $0: SA=${SA} is not supported"
+		echo "error in $0: SA=${SA} is not supported."
 		exit 1
 	    fi
 	fi
@@ -122,7 +122,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 #		echo ${CHSUB}
 		INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB}${INPUT_DATA_TEMPLATE_TAIL}
 		if [ ! -f ${INPUT_DATA} ] ; then
-		    echo "    info: break at ${CHSUB}"
+		    echo "    info: break at ${CHSUB}."
 		    CHSUB_BREAK_LIST=( ${CHSUB_BREAK_LIST[@]} ${CHSUB} )
 		    break
 		fi
@@ -157,8 +157,8 @@ if [ ${#CHSUB_BREAK_LIST[*]} -gt 0 ] ; then
     IFS=$'\n'
     CHSUB_BREAK_MIN=$( echo "${CHSUB_BREAK_LIST[*]}" | sort | head -n 1 )
     echo ""
-    echo "  info: minimum break date is ${CHSUB_BREAK_MIN}"
+    echo "  info: Minimum break date is ${CHSUB_BREAK_MIN}."
     echo ""
 fi
 
-echo "$0 normally finished"
+echo "$0 normally finished."

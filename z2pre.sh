@@ -24,7 +24,7 @@ if [   "${OVERWRITE}" != ""       \
     -a "${OVERWRITE}" != "no"     \
     -a "${OVERWRITE}" != "dry-rm" \
     -a "${OVERWRITE}" != "rm"  ] ; then
-    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet"
+    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet."
     exit 1
 fi
 
@@ -46,8 +46,23 @@ for VAR in ${VAR_LIST[@]} ; do
     # check output dir
     #
     if [ -f "${OUTPUT_DIR}/${VAR}/_locked" ] ; then
-	echo "info: ${OUTPUT_DIR} is locked"
+	echo "info: ${OUTPUT_DIR} is locked."
 	continue
+    fi
+    #
+    # check output data
+    #
+    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
+    if [ -f ${OUTPUT_CTL} ] ; then
+        FLAG=( $( exist_data.sh \
+            ${OUTPUT_CTL} \
+            $( time_2_grads ${START_DATE} ) \
+            $( time_2_grads ${ENDPP_DATE} ) \
+            "PP" ) ) || exit 1
+        if [ "${FLAG[0]}" = "ok" ] ; then
+            echo "info: Output data already exist."
+            continue
+        fi
     fi
     #
     # check input data
@@ -59,7 +74,7 @@ for VAR in ${VAR_LIST[@]} ; do
     INPUT_PRES_CTL=${INPUT_DIR}/${VAR_PRES}/${VAR_PRES}.ctl
     for CTL in ${INPUT_PRES_CTL} ${INPUT_CTL} ; do
 	if [ ! -f ${CTL} ] ; then
-	    echo "warning: ${CTL} does not exist"
+	    echo "warning: ${CTL} does not exist."
 	    continue 2
 	fi
 	FLAG=( $( exist_data.sh \
@@ -68,7 +83,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	    $( time_2_grads ${ENDPP_DATE} ) \
 	    "PP" ) ) || exit 1
 	if [ "${FLAG[0]}" != "ok" ] ; then
-	    echo "warning: All or part of data does not exist (CTL=${CTL})"
+	    echo "warning: All or part of data does not exist (CTL=${CTL})."
 	    continue 2
 	fi
     done
@@ -99,7 +114,6 @@ for VAR in ${VAR_LIST[@]} ; do
 #    TDEF_INCRE_MN=$( grads_ctl.pl ctl=${INPUT_CTL} ${OPT_NC} key=TDEF target=STEP unit=MN | sed -e "s/MN//" ) || exit 1
 
     OUTPUT_TDEF_ONEFILE=$( echo "60 * 60 * 24 / ${TDEF_INCRE_SEC}" | bc )   # per one file
-    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
     [ ! -d ${OUTPUT_DIR}/${VAR}     ] && mkdir -p ${OUTPUT_DIR}/${VAR}
     [ ! -d ${OUTPUT_DIR}/${VAR}/log ] && mkdir -p ${OUTPUT_DIR}/${VAR}/log
     #
@@ -204,7 +218,7 @@ for VAR in ${VAR_LIST[@]} ; do
 		-a "${OVERWRITE}" != "rm" ] ; then
 		continue 1
 	    fi
-	    echo "Removing ${OUTPUT_DATA}"
+	    echo "Removing ${OUTPUT_DATA}."
 	    echo ""
 	    [ "${OVERWRITE}" = "dry-rm" ] && continue 1
 	    rm -f ${OUTPUT_DATA}
@@ -259,7 +273,7 @@ EOF
 done
 
 if [ ${NOTHING} -eq 1 ] ; then
-    echo "info: nothing to do"
+    echo "info: Nothing to do."
 fi
 
-echo "$0 normally finished"
+echo "$0 normally finished."
