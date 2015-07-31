@@ -6,13 +6,13 @@
 
 echo "########## $0 start ##########"
 set -x
-START_YMD=$1    # date (YYYYMMDD)
-ENDPP_YMD=$2    # date (YYYYMMDD)
-INPUT_DIR=$3
-OUTPUT_DIR=$4
-XYDEF=$5
-OVERWRITE=$6   # optional
-TARGET_VAR=$7  # optional
+START_YMD=$1   # YYYYMMDD (start day of analysis period)
+ENDPP_YMD=$2   # YYYYMMDD (end+1 day of analysis period)
+INPUT_DIR=$3   # input dir
+OUTPUT_DIR=$4  # output dir
+XYDEF=$5       # output x/y grid in XXXxYYY (e.g. 144x72)
+OVERWRITE=$6   # overwrite option (optional)
+TARGET_VAR=$7  # variable name (optional)
 set +x
 echo "##########"
 
@@ -20,11 +20,9 @@ create_temp || exit 1
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}
 trap "finish" 0
 
-if [   "${OVERWRITE}" != ""       \
-    -a "${OVERWRITE}" != "yes"    \
-    -a "${OVERWRITE}" != "no"     \
-    -a "${OVERWRITE}" != "dry-rm" \
-    -a "${OVERWRITE}" != "rm"     ] ; then
+if [   "${OVERWRITE}" != ""                                 \
+    -a "${OVERWRITE}" != "yes"    -a "${OVERWRITE}" != "no" \
+    -a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
     echo "error: OVERWRITE = ${OVERWRITE} is not supported yet." >&2
     exit 1
 fi
@@ -36,22 +34,24 @@ else
 fi
 
 NOTHING=1
-#=====================================#
-#      var loop                       #
-#=====================================#
+#============================================================#
+#
+#  variable loop
+#
+#============================================================#
 for VAR in ${VAR_LIST[@]} ; do
     #
-    # check output dir
+    #----- check whether output dir is write-protected
     #
     if [ -f "${OUTPUT_DIR}/${VAR}/_locked" ] ; then
 	echo "info: ${OUTPUT_DIR} is locked."
 	continue
     fi
     #
-    # check output data
+    #----- check existence of output data
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    if [ -f ${OUTPUT_CTL} ] ; then
+    if [ -f "${OUTPUT_CTL}" ] ; then
         FLAG=( $( exist_data.sh ${OUTPUT_CTL} \
             $( time_2_grads ${START_YMD} )    \
             $( time_2_grads ${ENDPP_YMD} ) "PP" ) ) || exit 1
@@ -61,10 +61,10 @@ for VAR in ${VAR_LIST[@]} ; do
         fi
     fi
     #
-    # check input data
+    #----- check existence of input data
     #
     INPUT_CTL=${INPUT_DIR}/${VAR}/${VAR}.ctl
-    if [ ! -f ${INPUT_CTL} ] ; then
+    if [ ! -f "${INPUT_CTL}" ] ; then
 	echo "warning: ${INPUT_CTL} does not exist."
 	continue
     fi
@@ -75,54 +75,44 @@ for VAR in ${VAR_LIST[@]} ; do
 	echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
 	continue
     fi
-    EXT=grd
-    TMP=$( echo "${FLAG[1]}" | grep ".nc$" )
-    if [ "${TMP}" != "" ] ; then
-	EXT=nc
-	INPUT_NC_1=${FLAG[1]}
-    fi
     #
-    # get number of grid
+    #----- get number of grids for input/output
     #
     DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
-    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
+    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]}
+    TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
     TDEF_START=$(     grads_ctl.pl ${INPUT_CTL} TDEF 1 ) || exit 1
     TDEF_INCRE_SEC=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit SEC | sed -e "s/SEC//" ) || exit 1
     TDEF_INCRE_MN=$(  grads_ctl.pl ${INPUT_CTL} TDEF INC --unit MN  | sed -e "s/MN//"  ) || exit 1
     #
     XDEF_OUT=$( echo ${XYDEF} | cut -d x -f 1 )
     YDEF_OUT=$( echo ${XYDEF} | cut -d x -f 2 )
-    let OUTPUT_TDEF_ONEFILE=60*60*24/TDEF_INCRE_SEC   # per one file
-    mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    #
-    # generate control file (unified)
-    #
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    XDEF_OUT_START=$( echo "scale=7; 360 / ${XDEF_OUT} / 2"       | bc )
-    XDEF_OUT_INT=$(   echo "scale=7; 360.0 / ${XDEF_OUT}"         | bc )
-    #
-    # if YDEF is odd  -> [-90:90]
-    # if YDEF is even -> [-8_:8_] (default in roughen)
+    XDEF_OUT_START=$( echo "scale=7; 360.0 / ${XDEF_OUT} / 2" | bc ) || exit 1
+    XDEF_OUT_INT=$(   echo "scale=7; 360.0 / ${XDEF_OUT}"     | bc ) || exit 1
     let YDEF_OUT_TMP=YDEF_OUT/2*2
-    if [ ${YDEF_OUT} -ne ${YDEF_OUT_TMP} ] ; then
+    if [ ${YDEF_OUT} -ne ${YDEF_OUT_TMP} ] ; then # if YDEF is odd  -> [-90:90]
 	YDEF_OUT_START="-90.0"
 	YDEF_OUT_END="90.0"
-	YDEF_OUT_INT=$(   echo "scale=7; 180.0 / (${YDEF_OUT}-1)"     | bc )
-    else
-	YDEF_OUT_START=$( echo "scale=7; -90 + 180 / ${YDEF_OUT} / 2" | bc )
-	YDEF_OUT_END=$( echo "scale=7;  90 - 180 / ${YDEF_OUT} / 2" | bc )
-	YDEF_OUT_INT=$(   echo "scale=7; 180.0 / ${YDEF_OUT}"         | bc )
+	YDEF_OUT_INT=$(   echo "scale=7; 180.0 / (${YDEF_OUT}-1)"     | bc ) || exit 1
+    else  # if YDEF is even -> [-8_:8_] (default in roughen)
+	YDEF_OUT_START=$( echo "scale=7; -90 + 180 / ${YDEF_OUT} / 2" | bc ) || exit 1
+	YDEF_OUT_END=$(   echo "scale=7;  90 - 180 / ${YDEF_OUT} / 2" | bc ) || exit 1
+	YDEF_OUT_INT=$(   echo "scale=7; 180.0 / ${YDEF_OUT}"         | bc ) || exit 1
     fi
+    let TDEF_FILE=60*60*24/TDEF_INCRE_SEC       # number of time step per file
+    let TDEF_SEC_FILE=TDEF_INCRE_SEC*TDEF_FILE  # time in second per file
     #
-    let TDEF_ONEFILE_INCRE_SEC=TDEF_INCRE_SEC*OUTPUT_TDEF_ONEFILE
+    #---- generate control file (unified)
+    #
+    mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
+    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
     #
     rm -f ${OUTPUT_CTL}.chsub
-    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S )  # YYYYMMDD HH:MM:SS
-    echo "CHSUB  1  ${OUTPUT_TDEF_ONEFILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub    
-    for(( d=1+${OUTPUT_TDEF_ONEFILE}; ${d}<=${TDEF}; d=${d}+${OUTPUT_TDEF_ONEFILE} )) ; do
-	let CHSUB_MAX=d+OUTPUT_TDEF_ONEFILE-1
-	DATE=$( date -u --date "${DATE} ${TDEF_ONEFILE_INCRE_SEC} seconds" +%Y%m%d\ %H:%M:%S )
+    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
+    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub    
+    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
+	let CHSUB_MAX=d+TDEF_FILE-1
+	DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
 	echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
     done
     sed ${OUTPUT_CTL}.tmp1 \
@@ -139,49 +129,48 @@ for VAR in ${VAR_LIST[@]} ; do
         -e "}" \
         -e "s/^YDEF.*/YDEF  ${YDEF_OUT}  LINEAR  ${YDEF_OUT_START}  ${YDEF_OUT_INT}/" \
         -e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
-	> ${OUTPUT_CTL}.tmp
-    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp   > ${OUTPUT_CTL}
-    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL}
-    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL}
+	> ${OUTPUT_CTL}.tmp || exit 1
+    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
+    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
+    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
     rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp1 ${OUTPUT_CTL}.chsub
 #    cat ${OUTPUT_CTL}
-
-    #=====================================#
-    #      date loop (for each file)      #
-    #=====================================#
-    for(( d=1; ${d}<=${TDEF}; d=${d}+${OUTPUT_TDEF_ONEFILE} )) ; do
+    #
+    #========================================#
+    #  date loop (for each file)
+    #========================================#
+    for(( d=1; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
 	#
 	#----- set/proceed date -----#
 	#
 	if [ ${d} -eq 1 ] ; then
-	    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S )
+	    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1
 	else
-	    DATE=$( date -u --date "${DATE} ${TDEF_ONEFILE_INCRE_SEC} seconds" +%Y%m%d\ %H:%M:%S )
+	    DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
 	fi
 	YMD=${DATE:0:8}
-	YMDPP=$( date -u --date "${YMD} 1 day" +%Y%m%d )
 	#
 	[ ${YMD} -lt ${START_YMD} ] && continue
 	[ ${YMD} -ge ${ENDPP_YMD} ] && break
 	#
+	YMDPP=$( date -u --date "${YMD} 1 day" +%Y%m%d ) || exit 1
 	YEAR=${DATE:0:4} ; MONTH=${DATE:4:2} ; DAY=${DATE:6:2}
 	#
-        #----- output data -----#
+        #----- output data
         #
         # File name convention
         #   2004/ms_tem_20040601.grd  (center of the date if incre > 1dy)
 	#
 	OUTPUT_DATA=${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.grd
-        mkdir -p ${OUTPUT_DIR}/${VAR}/${YEAR}
+        mkdir -p ${OUTPUT_DIR}/${VAR}/${YEAR} || exit 1
 	#
-        # output file exist?
-	if [ -f ${OUTPUT_DATA} ] ; then
+        #----- output file exist?
+	#
+	if [ -f "${OUTPUT_DATA}" ] ; then
 	    SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' )
-	    SIZE_OUT_EXACT=$( echo 4*${XDEF_OUT}*${YDEF_OUT}*${ZDEF}*${OUTPUT_TDEF_ONEFILE} | bc )
-	    if [   ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} \
-		-a "${OVERWRITE}" != "yes" \
-		-a "${OVERWRITE}" != "dry-rm" \
-		-a "${OVERWRITE}" != "rm" ] ; then
+	    SIZE_OUT_EXACT=$( echo 4*${XDEF_OUT}*${YDEF_OUT}*${ZDEF}*${TDEF_FILE} | bc )
+	    if [   ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} -a "${OVERWRITE}" != "yes" \
+		-a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
 		continue 1
 	    fi
 	    echo "Removing ${OUTPUT_DATA}."
@@ -190,18 +179,18 @@ for VAR in ${VAR_LIST[@]} ; do
 	    rm -f ${OUTPUT_DATA}
 	fi
 	[ "${OVERWRITE}" = "rm" -o "${OVERWRITE}" = "dry-rm" ] && exit
-	
-	NOTHING=0
 	#
-	#----- combine necessary input file -----#
+	#----- combine necessary input file
 	#
 	echo "YMD=${YMD}"
 	get_data.sh -v ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
 	    -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
 	#
-	#----- roughen -----#
+	#----- roughen
+	#
         # assuming globally uniform grid
 	#
+	NOTHING=0
 	cd ${TEMP_DIR}
 	# for 2013/04/18 or later NICAM
 	cat > roughen.cnf <<EOF
@@ -219,7 +208,7 @@ for VAR in ${VAR_LIST[@]} ; do
     jmax_out      = ${YDEF_OUT},        ! grid number for y-axis (output data)
 
     kmax          = ${ZDEF},            ! vertical grid number
-    tmax          = ${OUTPUT_TDEF_ONEFILE}, ! time
+    tmax          = ${TDEF_FILE}, ! time
     varmax        = 1,                  ! variable number
     varname       = '${VAR}',
     undef         = -99.9e+33,
@@ -227,16 +216,6 @@ for VAR in ${VAR_LIST[@]} ; do
     latmax_out    = ${YDEF_OUT_END},
 /
 EOF
-
-#	let YDEF_OUT_TMP=YDEF_OUT/2*2
-#	if [ ${YDEF_OUT} -ne ${YDEF_OUT_TMP} ] ; then
-#	    cat >> roughen.cnf <<EOF
-#    latmin_out    = -90.0,
-#    latmax_out    = 90.0,
-#EOF
-#	fi
-#	echo "/" >> roughen.cnf
-	#
         ${BIN_ROUGHEN} || exit 1
 	#
 	mv ${VAR}_${YMD}.grd ../${OUTPUT_DIR}/${VAR}/${YEAR}/ || exit 1
@@ -246,11 +225,7 @@ EOF
 
     done   # date loop
 
-done  # var loop
+done  # variable loop
 
-
-if [ ${NOTHING} -eq 1 ] ; then
-    echo "info: Nothing to do."
-fi
-
+[ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 echo "$0 normally finished."
