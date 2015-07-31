@@ -167,8 +167,8 @@ for VAR in ${VAR_LIST[@]} ; do
         #----- output file exist?
 	#
 	if [ -f "${OUTPUT_DATA}" ] ; then
-	    SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' )
-	    SIZE_OUT_EXACT=$( echo 4*${XDEF_OUT}*${YDEF_OUT}*${ZDEF}*${TDEF_FILE} | bc )
+	    SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' ) || exit 1
+	    SIZE_OUT_EXACT=$( echo 4*${XDEF_OUT}*${YDEF_OUT}*${ZDEF}*${TDEF_FILE} | bc ) || exit 1
 	    if [   ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} -a "${OVERWRITE}" != "yes" \
 		-a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
 		continue 1
@@ -208,7 +208,7 @@ for VAR in ${VAR_LIST[@]} ; do
     jmax_out      = ${YDEF_OUT},        ! grid number for y-axis (output data)
 
     kmax          = ${ZDEF},            ! vertical grid number
-    tmax          = ${TDEF_FILE}, ! time
+    tmax          = ${TDEF_FILE},       ! time
     varmax        = 1,                  ! variable number
     varname       = '${VAR}',
     undef         = -99.9e+33,
@@ -223,7 +223,7 @@ EOF
 	rm ${VAR}_${YMD}.grd.in
 	cd - > /dev/null || exit 1
 
-    done   # date loop
+    done  # date loop
 
 done  # variable loop
 
