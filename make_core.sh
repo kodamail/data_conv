@@ -304,7 +304,8 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" )
 	#
-	DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=3 ) || exit 1
+#	DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=3 ) || exit 1
+	DIR_OUT=$( conv_dir ${DIR_IN_NEW} ZDEF=3 ) || exit 1
 	./isccp_3cat.sh ${START_DATE} ${ENDPP_DATE} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${OVERWRITE} || exit 1
