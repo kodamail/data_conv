@@ -107,7 +107,7 @@ for VAR in ${VAR_LIST[@]} ; do
         -e "s|^DSET .*$|DSET \^%ch.grd|" \
 	-e "/^CHSUB .*/d"  \
 	-e "s/TEMPLATE//ig" \
-        -e "s/^OPTIONS /OPTIONS TEMPLATE /i" \
+        -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
 	-e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
 	-e "/^ZDEF/,/^TDEF/{" \
 	-e "/^\(ZDEF\|TDEF\)/!D" \
