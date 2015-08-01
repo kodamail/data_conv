@@ -53,9 +53,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
     if [ -f "${OUTPUT_CTL}" ] ; then
-        FLAG=( $( exist_data.sh ${OUTPUT_CTL} \
-            $( time_2_grads ${START_YMD} )    \
-            $( time_2_grads ${ENDPP_YMD} ) "PP" ) ) || exit 1
+        FLAG=( $( exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
             echo "info: Output data already exist."
             continue
@@ -71,9 +69,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	    echo "warning: ${CTL} does not exist."
 	    continue 2
 	fi
-	FLAG=( $( exist_data.sh ${CTL}     \
-	    $( time_2_grads ${START_YMD} ) \
-	    $( time_2_grads ${ENDPP_YMD} ) "PP" ) ) || exit 1
+	FLAG=( $( exist_data.sh ${CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
 	if [ "${FLAG[0]}" != "ok" ] ; then
 	    echo "warning: All or part of data does not exist (CTL=${CTL})."
 	    continue 2
@@ -135,8 +131,7 @@ for VAR in ${VAR_LIST[@]} ; do
         if [ ${d} -eq 1 ] ; then
             DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1
         else
-            DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit \
-1
+            DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
         fi
         YMD=${DATE:0:8}
         #
