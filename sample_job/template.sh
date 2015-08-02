@@ -35,6 +35,7 @@ HGRID_LIST=( 144x72 )
 # = "monthly_mean": monthly mean
 #
 TGRID_LIST=( tstep monthly_mean )
+#TGRID_LIST=(  monthly_mean )
 #
 #----- time range
 #
@@ -48,15 +49,6 @@ START_YMD=20040601 ; ENDPP_YMD=20040701  # June 2004
 # name of analyzed variable
 #
 #============================================================#
-#
-# For each time step,
-#   L0 data are native data.
-#   L1 analysis may use L0 data.
-#   L2 analysis may use L0-L1 data.
-#   L3 analysis may use L0-L2 data.
-# For monthly mean,
-#   L0-L3 time step data may be used.
-#
 #
 #----- name of variable for all the analysis
 #
@@ -83,26 +75,20 @@ VARS=( \
 #sl \
     )
 #
-FLAG_TSTEP=0   # <- not necessary: TGRID_LIST
-# --- TODO: L1, L2, ... are meaningless? (just this order)
-FLAG_TSTEP_L1_REDUCE=1
-FLAG_TSTEP_L2_Z2PRE=0
-FLAG_TSTEP_L2_PLEVOMEGA=0
-FLAG_TSTEP_L2_ISCCP3CAT=0
-FLAG_TSTEP_L3_ZM=1
-#
-#----- name of variable in time-step analysis
-# just comment out below line(s) if it is not necessary.
-#
-#VARS_TSTEP=( ${VARS[@]} )           # all tstep analysis
-#
-#VARS_TSTEP_1=(   ${VARS_TSTEP[@]} ) # reduce_grid.sh
-#VARS_TSTEP_2_1=( ${VARS_TSTEP[@]} ) # z2pre.sh (multi level)
-VARS_TSTEP_2_3=( ms_omega )         # plev_omega.sh
-VARS_TSTEP_3=(   ${VARS_TSTEP[@]} ) # zonal_mean.sh
 
 
-
+#
+#----- analysis flag
+#
+# Analysis for time step data will be done with the order below. Monthly means are performed after time step analysis.
+#
+# Just comment out below line(s) if it is not necessary.
+#
+FLAG_TSTEP_REDUCE=1
+FLAG_TSTEP_Z2PRE=0
+FLAG_TSTEP_PLEVOMEGA=0
+FLAG_TSTEP_ISCCP3CAT=0
+FLAG_TSTEP_ZM=1
 
 
 #----- pressure levels -----#
@@ -114,6 +100,8 @@ VARS_TSTEP_3=(   ${VARS_TSTEP[@]} ) # zonal_mean.sh
 PDEF_LEVELS_RED[0]="1000,975,950,925,900,875,850,825,800,775,750,700,650,600,550,500,450,400,350,300,250,225,200,175,150,125,100,70,50,30,20,10,7,5,3,2,1"
 
 PDEF_LEVELS_RED[1]="500"
+
+
 
 #============================================================#
 #
