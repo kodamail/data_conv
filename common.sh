@@ -189,7 +189,7 @@ function expand_vars()
     VARS_ISCCP=( $( ls ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
     VARS_LL=(    $( ls ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_ML=(    $( ls ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep 2>/dev/null ) \
-	      ms_omega ms_z )
+	ms_omega ms_z )
     VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
 #    VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
@@ -210,7 +210,7 @@ function expand_vars()
 	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ISCCP[@]} )
 #	elif [ "${VAR}" = "ADV" ] ; then
 #	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ADV[@]}  )
-	elif [ "${VAR}" = "ALL" ] ; then
+	elif [ "${VAR}" = "ALL" -o "${VAR}" = "all" ] ; then
 	    VARS_TEMP=( ${VARS_TEMP[@]} ${VARS_ALL[@]}  )
 	else
 	    VARS_TEMP=( ${VARS_TEMP[@]} ${VAR} )
