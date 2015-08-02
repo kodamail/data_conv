@@ -11,7 +11,7 @@ HGRID_LIST=( 240x121 zmean_121 )  # standard
 
 TGRID_LIST=( tstep monthly_mean )  # standard
 
-START_DATE=20040601 ; ENDPP_DATE=20050601
+START_YMD=20040601 ; ENDPP_YMD=20050601
 
 VARS=( \
     sa_cldi      \

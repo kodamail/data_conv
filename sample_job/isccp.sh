@@ -10,7 +10,7 @@ OVERWRITE="no"
 HGRID_LIST=( 144x72 zmean_72 )  # standard
 TGRID_LIST=( tstep monthly_mean )  # standard
 
-START_DATE=20040601 ; ENDPP_DATE=20040701
+START_YMD=20040601 ; ENDPP_YMD=20040701
 
 VARS=( \
     dfq_isccp2   \

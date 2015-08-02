@@ -10,7 +10,7 @@ OVERWRITE="no"
 HGRID_LIST=( 240x121 zmean_121x37 )  # standard
 TGRID_LIST=( tstep monthly_mean )
 
-START_DATE=20040601 ; ENDPP_DATE=20050601
+START_YMD=20040601 ; ENDPP_YMD=20050601
 
 VARS=( \
     ms_pres \

@@ -68,7 +68,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	    [ "${HGRID}" = "${XDEF_NAT}x${YDEF_NAT}" ] && continue
 	    [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} XYDEF=${HGRID} ) || exit 1
-	    ./reduce_grid2.sh ${START_DATE} ${ENDPP_DATE} \
+	    ./reduce_grid2.sh ${START_YMD} ${ENDPP_YMD} \
 		${DIR_IN_NEW} ${DIR_OUT} \
 		${HGRID} ${OVERWRITE} ${VAR} || exit 1
 	    #
@@ -119,7 +119,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	else
 	    DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || exit 1
 	fi
-	./z2pre.sh ${START_DATE} ${ENDPP_DATE} \
+	./z2pre.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${PDEF_LEVELS_RED[0]} ${OVERWRITE} ${VAR} || exit 1
 	#
@@ -173,10 +173,10 @@ for DIR_INOUT in ${DIR_INOUT_LIST[@]} ; do
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 	DIR_INOUT_NEW=$( echo ${DIR_INOUT} | sed -e "s|/tstep$|/${PERIOD}|" )
 	#
-#	./plev_omega.sh ${START_DATE} ${ENDPP_DATE} \
+#	./plev_omega.sh ${START_YMD} ${ENDPP_YMD} \
 #	    ${DIR_INOUT_NEW} \
 #	    ${PDEF_LEVELS_RED[0]} ms_w ms_rho none none ${OVERWRITE} || exit 1
-	./plev_omega.sh ${START_DATE} ${ENDPP_DATE} \
+	./plev_omega.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_INOUT_NEW} \
 	    ${PDEF_LEVELS_RED[0]} ms_w none ms_tem ${OVERWRITE} || exit 1
 	#
@@ -225,7 +225,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	fi
 	echo "error! plev_z.sh should be re-written!"
 	exit 1
-	./plev_z.sh ${START_DATE} ${ENDPP_DATE} \
+	./plev_z.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${PDEF_LEVELS_RED[0]} ms_pres ${OVERWRITE} || exit 1
 	#
@@ -268,7 +268,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	DIR_SL_IN=${DIR_OUT}
 	echo "error! vint.sh should be re-written!"
 	exit 1
-	./vint.sh ${START_DATE} ${ENDPP_DATE} \
+	./vint.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN} ${DIR_SL_IN} \
 	    ${DIR_OUT} \
 	    ${OVERWRITE} ${VAR} || exit 1
@@ -306,7 +306,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	#
 #	DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=3 ) || exit 1
 	DIR_OUT=$( conv_dir ${DIR_IN_NEW} ZDEF=3 ) || exit 1
-	./isccp_3cat.sh ${START_DATE} ${ENDPP_DATE} \
+	./isccp_3cat.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${OVERWRITE} || exit 1
 	    
@@ -356,7 +356,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	#DIR_IN_NEW=${DIR_IN%tstep}${PERIOD}
 	#
 	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
-	./zonal_mean.sh ${START_DATE} ${ENDPP_DATE} \
+	./zonal_mean.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
 	    ${OVERWRITE} ${VAR} || exit 1
 	#
@@ -473,7 +473,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    [ "${VAR_CHILD}" != "${VAR}" ] && continue
 	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 	    if [ "${PERIOD}" = "monthly_mean" ] ; then
-		./monthly_mean3.sh ${START_DATE} ${ENDPP_DATE} \
+		./monthly_mean3.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${OVERWRITE} ${VAR} || exit 1
 	    else
@@ -481,7 +481,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
 		echo "error! multi_step3.sh should be re-written!"
 		exit 1
-		./multi_step3.sh ${START_DATE} ${ENDPP_DATE} \
+		./multi_step3.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${PERIOD} ${OVERWRITE} ${VAR} ${SA} || exit 1
 	    fi
@@ -539,7 +539,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 
 	    echo "error! daily_clim.sh should be re-written!"
 	    exit 1
-	    ./daily_clim.sh ${START_DATE} ${ENDPP_DATE} \
+	    ./daily_clim.sh ${START_YMD} ${ENDPP_YMD} \
 		${DIR_IN} ${DIR_OUT} \
 		${OVERWRITE} ${VAR} || exit 1
 	done
