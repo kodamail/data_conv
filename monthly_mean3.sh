@@ -50,8 +50,12 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of output data
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
+    YM_START=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || exit 1
+    YM_END=$( date -u --date "${ENDPP_YMD} 1 month ago"  +%Y%m ) || exit 1
+
     if [ -f "${OUTPUT_CTL}" ] ; then
-        FLAG=( $( exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+#        FLAG=( $( exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+        FLAG=( $( exist_data.sh ${OUTPUT_CTL} -ymd "[${YM_START}15:${YM_END}15]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
             echo "info: Output data already exist."
             continue
@@ -113,8 +117,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
     #  month loop (for each file)
     #========================================#
-    YM=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || exit 1
-    YM_END=$( date -u --date "${ENDPP_YMD} 1 month ago"  +%Y%m ) || exit 1
+    YM=${YM_START}
     while [ ${YM} -lt ${YM_END} ] ; do
         #
         #----- set/proceed date -----#
