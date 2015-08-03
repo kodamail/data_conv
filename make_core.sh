@@ -2,38 +2,39 @@
 #
 # Flexible analysis system for NICAM (and various type of) output
 #
-# TODO: support z->p for native grid (such as for gl06)
-# TODO: complex configure (e.g. using namelist-like syntax)
-# TODO: when monthly-mean or zonal-mean, if most (>90%) of the values are undef, then the resulting mean value should be set to undef, like legacy data_conv
-# TODO: create land/sea mask from la_tg (undef -> ocean)
-#
-. ./common.sh     || exit 1
+. ./common.sh || exit 1
 
 JOB=$1
-[ ! -f "${JOB}" ] && { echo "error: ${JOB} does not exist." ; exit 1 ; }
 
 echo "$0 started."
 date
 #############################################################
-# load job
+#
+# Load job
+#
 #############################################################
+[ ! -f "${JOB}" ] && { echo "error: ${JOB} does not exist." >&2 ; exit 1 ; }
 . ${JOB} || exit 1
 
 #############################################################
+#
 # Expand VARS
+#
 #############################################################
 VARS=( $( expand_vars ${#VARS[@]} ${VARS[@]} ) ) || exit 1
 
 #############################################################
+#
 # Basic Analysis (tstep)
+#
 #############################################################
 VARS_TSTEP=( )
 for TGRID in ${TGRID_LIST[@]} ; do
     if [ "${TGRID}" = "tstep" ] ; then
 	VARS_TSTEP=( all )  # default variables
 	VARS_TSTEP=( $( expand_vars ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
-#	VARS_TSTEP=( $( dep_var ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} \
-#                                ${#VARS[@]}       ${VARS[@]} ) ) || exit 1
+	VARS_TSTEP=( $( dep_var     ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} \
+                                    ${#VARS[@]}       ${VARS[@]} ) ) || exit 1
 	echo "############################################################"
 	echo "#"
 	echo "# Basic Analysis (tstep)"
@@ -43,16 +44,15 @@ for TGRID in ${TGRID_LIST[@]} ; do
 	break
     fi
 done
-
 #
-########## (L1) reduce grid ##########
+########## reduce grid ##########
 #
-VARS_TSTEP_REDUCE=( )
+VARS_ANA=( )
 if [ ${FLAG_TSTEP_REDUCE} -eq 1 ] ; then
-    VARS_TSTEP_REDUCE=( all )  # default variables
-    VARS_TSTEP_REDUCE=( $( expand_vars ${#VARS_TSTEP_REDUCE[@]} ${VARS_TSTEP_REDUCE[@]} ) )
-    VARS_TSTEP_REDUCE=( $( dep_var     ${#VARS_TSTEP_REDUCE[@]} ${VARS_TSTEP_REDUCE[@]} \
-                                       ${#VARS_TSTEP[@]}        ${VARS_TSTEP[@]} ) )
+    VARS_ANA=( all )  # default variables
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
 DIR_IN_LIST=()
 for DIR_IN in \
@@ -66,7 +66,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	[ "${HGRID}" = "${XDEF_NAT}x${YDEF_NAT}" ] && continue
 	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 	#
-	for VAR in ${VARS_TSTEP_REDUCE[@]} ; do
+	for VAR in ${VARS_ANA[@]} ; do
 	    INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
 	    [ ! -f "${INPUT_CTL}" ] && continue
 	    PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
@@ -85,16 +85,16 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
     done
 done
 
-########## (L2) z -> p ##########
+########## z -> p ##########
 #
 # multi pressure levels in low horizontal resolution
 #
-VARS_TSTEP_Z2PRE=( )
+VARS_ANA=( )
 if [ ${FLAG_TSTEP_Z2PRE} -eq 1 ] ; then
-    VARS_TSTEP_Z2PRE=( ml )  # default variables
-    VARS_TSTEP_Z2PRE=( $( expand_vars ${#VARS_TSTEP_Z2PRE[@]} ${VARS_TSTEP_Z2PRE[@]} ) )
-    VARS_TSTEP_Z2PRE=( $( dep_var     ${#VARS_TSTEP_Z2PRE[@]} ${VARS_TSTEP_Z2PRE[@]} \
-                                      ${#VARS_TSTEP[@]}       ${VARS_TSTEP[@]} ) )
+    VARS_ANA=( ml )  # default variables
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
 DIR_IN_LIST=( )
 for HGRID in ${HGRID_LIST[@]} ; do
@@ -102,10 +102,8 @@ for HGRID in ${HGRID_LIST[@]} ; do
     DIR_IN=../../ml_zlev/${HGRID}x${ZDEF_NAT}/tstep
     [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
-
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
-    for VAR in ${VARS_TSTEP_Z2PRE[@]} ; do
-#	[ "${VAR}" = "ms_pres" ] && continue
+    for VAR in ${VARS_ANA[@]} ; do
 	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
 	[ ! -f "${INPUT_CTL}" ] && continue
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
@@ -135,21 +133,19 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	    cd ${DIR_OUT}/../tstep || exit 1
 	    [ ! -d "${VAR}" -a ! -L "${VAR}" ] && ln -s ../${PERIOD}/${VAR}
 	    cd - > /dev/null || exit 1
-	    
-	done  # PDEF_LEVELS loop
-    done  # VAR loop
-done  # DIR_IN loop
-
+	done
+    done
+done
 
 #
 # omega velocity on pressure level
 #
-VARS_TSTEP_PLEVOMEGA=( )
+VARS_ANA=( )
 if [ ${FLAG_TSTEP_PLEVOMEGA} -eq 1 ] ; then
-    VARS_TSTEP_PLEVOMEGA=( ms_omega ma_omega )
-    VARS_TSTEP_PLEVOMEGA=( $( expand_vars ${#VARS_TSTEP_PLEVOMEGA[@]} ${VARS_TSTEP_PLEVOMEGA[@]} ) ) || exit 1
-    VARS_TSTEP_PLEVOMEGA=( $( dep_var     ${#VARS_TSTEP_PLEVOMEGA[@]} ${VARS_TSTEP_PLEVOMEGA[@]} \
-                                          ${#VARS_TSTEP[@]}           ${VARS_TSTEP[@]} ) ) || exit 1
+    VARS_ANA=( ms_omega ma_omega )
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
 DIR_IN_LIST=( )
 PDEF_LEVELS_IN_LIST=( )
@@ -174,7 +170,7 @@ for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
     PDEF_LEVELS_IN=${PDEF_LEVELS_IN_LIST[$i]}
     PDEF=$( get_pdef ${PDEF_LEVELS_IN} ) || exit 1
     #
-    for VAR in ${VARS_TSTEP_PLEVOMEGA[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
 	TYPE=${VAR:1:1}
 	INPUT_CTL=${DIR_INOUT}/m${TYPE}_w/m${TYPE}_w.ctl
 	[ ! -f "${INPUT_CTL}" ] && continue
@@ -198,8 +194,6 @@ for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
 	cd - > /dev/null || exit 1
     done
 done
-
-
 
 #
 # geopotantial height in low horizontal resolution
@@ -293,12 +287,12 @@ done
 ########## 2.9 ISCCP special ##########
 # to create 3-category tstep data
 #
-VARS_TSTEP_ISCCP3CAT=( )
+VARS_ANA=( )
 if [ ${FLAG_TSTEP_ISCCP3CAT} -eq 1 ] ; then
-    VARS_TSTEP_ISCCP3CAT=( dfq_isccp2 )
-    VARS_TSTEP_ISCCP3CAT=( $( expand_vars ${#VARS_TSTEP_ISCCP3CAT[@]} ${VARS_TSTEP_ISCCP3CAT[@]} ) )
-    VARS_TSTEP_ISCCP3CAT=( $( dep_var     ${#VARS_TSTEP_ISCCP3CAT[@]} ${VARS_TSTEP_ISCCP3CAT[@]} \
-                                          ${#VARS_TSTEP[@]}           ${VARS_TSTEP[@]} ) )
+    VARS_ANA=( dfq_isccp2 )
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
 DIR_IN_LIST=( )
 for HGRID in ${HGRID_LIST[@]} ; do
@@ -308,7 +302,7 @@ for HGRID in ${HGRID_LIST[@]} ; do
     done
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
-    for VAR in ${VARS_TSTEP_ISCCP3CAT[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
 	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
 	[ ! -f "${INPUT_CTL}" ] && continue
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
@@ -334,14 +328,14 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 done
 
 
-########## 3. zonal mean ##########
+########## zonal mean ##########
 #
-VARS_TSTEP_ZM=( )
+VARS_ANA=( )
 if [ ${FLAG_TSTEP_ZM} -eq 1 ] ; then
-    VARS_TSTEP_ZM=( all )
-    VARS_TSTEP_ZM=( $( expand_vars ${#VARS_TSTEP_ZM[@]} ${VARS_TSTEP_ZM[@]} ) )
-    VARS_TSTEP_ZM=( $( dep_var     ${#VARS_TSTEP_ZM[@]} ${VARS_TSTEP_ZM[@]} \
-                                   ${#VARS_TSTEP[@]}    ${VARS_TSTEP[@]} ) )
+    VARS_ANA=( all )
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
 DIR_IN_LIST=( )
 for HGRID in ${HGRID_LIST[@]} ; do
@@ -359,7 +353,7 @@ for HGRID in ${HGRID_LIST[@]} ; do
     done
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
-    for VAR in ${VARS_TSTEP_ZM[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
 	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
 	[ ! -f "${INPUT_CTL}" ] && continue
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
@@ -432,7 +426,6 @@ done
 
 
 
-# run twiece or more if time-mean data are necessary for the analysis
 #############################################################
 # Basic Analysis (time-mean or time-skipped)
 #
@@ -440,7 +433,6 @@ done
 #   *_tstep : following tstep file name (e.g. sa: mean  ss: snapshot)
 #   *_mean  : always mean
 #
-# TODO: rmean
 #############################################################
 for PERIOD in ${TGRID_LIST[@]} ; do
     [ "${PERIOD}" = "tstep" -o "${PERIOD:0:5}" = "clim_" ] && continue
@@ -452,10 +444,10 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     echo "############################################################"
     echo "#"
     #
-    VARS_PERIOD=( all )
-    VARS_PERIOD=( $( expand_vars ${#VARS_PERIOD[@]} ${VARS_PERIOD[@]} ) )
-    VARS_PERIOD=( $( dep_var     ${#VARS_PERIOD[@]} ${VARS_PERIOD[@]} \
-                                 ${#VARS[@]}        ${VARS[@]} ) )    
+    VARS_ANA=( all )
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]} ${VARS_ANA[@]} \
+                              ${#VARS[@]}     ${VARS[@]} ) ) || exit 
     DIR_IN_LIST=( )
     for HGRID in ${HGRID_LIST[@]} ; do
 	for DIR_IN in \
@@ -472,7 +464,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     done
     #
     for DIR_IN in ${DIR_IN_LIST[@]} ; do
-	for VAR in ${VARS_PERIOD[@]} ; do
+	for VAR in ${VARS_ANA[@]} ; do
 	    [ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ] && continue
 	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 	    #
@@ -492,7 +484,6 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	done
     done
 done
-
 
 echo "$0 normally finished."
 date
