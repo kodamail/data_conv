@@ -1,23 +1,18 @@
 #!/bin/sh
-#
 # for standard analysis and web archive
 #
-DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )
+# Do not edit below two lines: Load common.sh if it exists in the same directory
+DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.sh
 [ -f "${DIR_SCRIPT}/common.sh" ] && . ${DIR_SCRIPT}/common.sh
 
-
-
-#----- general -----#
-OVERWRITE="no"
-
-#----- X/Y/Z/T/V -----#
+#----- XDEF/YDEF
 HGRID_LIST=( 144x72 288x145 360x181 2560x1280 zmean_72 zmean_145 zmean_181 zmean_1280 )  # standard
-TGRID_LIST=( tstep monthly_mean )  # standard
 
-START_YMD=20040601 ; ENDPP_YMD=20040701
+#----- TDEF
+TGRID_LIST=( tstep monthly_mean )
+#START_YMD=20040601 ; ENDPP_YMD=20040701  # normally given by common.sh
 
-
-
+#----- VAR
 VARS=( \
     dfq_isccp2   \
     oa_sst       \
@@ -46,6 +41,6 @@ VARS=( \
     sa_v10m      \
     )
 
-VARS_TSTEP=( ${VARS[@]} )           # for tstep
-VARS_TSTEP_1=( ${VARS_TSTEP[@]} )   # reduce_grid.sh
-VARS_TSTEP_3=( ${VARS_TSTEP[@]} )   # zonal_mean.sh
+#----- Analysis flag
+FLAG_TSTEP_REDUCE=1
+FLAG_TSTEP_ZM=1
