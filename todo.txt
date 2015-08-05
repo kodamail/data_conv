@@ -1,8 +1,6 @@
 -definition of HGRID: in latlev. HGRID_LIST=( zmean_72x37 ) seems to be possible, which is inappropriate (Z-level is equivalent to native grid, so this expression is not necessaey).
 -latlev: p37 is necessary for all the data?
 
--PDEF_LEVELS_RED -> PDEF_LEVELS_LIST
-
 -when monthly-mean or zonal-mean, if most (>90%) of the values are undef, then the resulting mean value should be set to undef, like legacy data_conv
 create land/sea mask from la_tg (undef -> ocean)
 

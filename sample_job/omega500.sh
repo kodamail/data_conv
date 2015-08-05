@@ -10,7 +10,7 @@ HGRID_LIST=( 144x72 zmean_72 )
 #HGRID_LIST=( 144x72 zmean_72_p500 )  # legacy expression
 
 #----- ZDEF(pressure)
-PDEF_LEVELS_RED[0]="500"
+PDEF_LEVELS_LIST[0]="500"
 
 #----- TDEF
 TGRID_LIST=( tstep monthly_mean )

@@ -109,7 +109,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 	#
-	for PDEF_LEVELS in ${PDEF_LEVELS_RED[@]} ; do
+	for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
 	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
 	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TAG=ml_plev ) || exit 1
 	    if [ ${PDEF} -eq 1 ] ; then
@@ -149,10 +149,10 @@ if [ ${FLAG_TSTEP_PLEVOMEGA} -eq 1 ] ; then
 fi
 DIR_IN_LIST=( )
 PDEF_LEVELS_IN_LIST=( )
-PDEF=$( get_pdef ${PDEF_LEVELS_RED[0]} ) || exit 1
+PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
 for HGRID in ${HGRID_LIST[@]} ; do
     [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
-    for PDEF_LEVELS in ${PDEF_LEVELS_RED[@]} ; do
+    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
 	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
 	if [ ${PDEF} -eq 1 ] ; then
 	    DIR_INOUT=../../ml_plev/${HGRID}_p${PDEF_LEVELS}/tstep
@@ -179,7 +179,7 @@ for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
 	#
 	./plev_omega.sh ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_INOUT_NEW} \
-	    ${PDEF_LEVELS_RED[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || exit 1
+	    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || exit 1
 	#
 #	RESULT=$( diff ${DIR_INOUT_NEW}/ms_w/ms_w.ctl ${DIR_INOUT_NEW}/../tstep/ms_w/ms_w.ctl ) || exit 1
 #	if [ "${RESULT}" = "" ] ; then
@@ -218,7 +218,7 @@ done
 #	    ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) )
 #	for VAR in ${VARS_TEMP[@]} ; do
 #	    [ "${VAR}" != "ms_z" ] && continue
-#	    PDEF=$( get_pdef ${PDEF_LEVELS_RED[0]} ) || exit 1
+#	    PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
 #	#
 #	    INPUT_CTL=${DIR_IN}/ms_pres/ms_pres.ctl
 #	    PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
@@ -226,7 +226,7 @@ done
 #	#
 #	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TAG=ml_plev ) || exit 1
 #	    if [ ${PDEF} -eq 1 ] ; then
-#		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS_RED[0]} ) || exit 1
+#		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS_LIST[0]} ) || exit 1
 #	    else
 #		DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || exit 1
 #	    fi
@@ -234,7 +234,7 @@ done
 #	    exit 1
 #	    ./plev_z.sh ${START_YMD} ${ENDPP_YMD} \
 #		${DIR_IN_NEW} ${DIR_OUT} \
-#		${PDEF_LEVELS_RED[0]} ms_pres ${OVERWRITE} || exit 1
+#		${PDEF_LEVELS_LIST[0]} ms_pres ${OVERWRITE} || exit 1
 #	#
 #	    RESULT=$( diff ${DIR_IN_NEW}/ms_pres/ms_pres.ctl ${DIR_IN_NEW}/../tstep/ms_pres/ms_pres.ctl ) || exit 1
 #	    if [ "${RESULT}" = "" ] ; then
@@ -346,7 +346,7 @@ for HGRID in ${HGRID_LIST[@]} ; do
 	../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ; do
 	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
     done
-    for PDEF_LEVELS in ${PDEF_LEVELS_RED[@]} ; do
+    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
 	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
 	DIR_IN=../../ml_plev/${HGRID}x${PDEF}/tstep
 	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
@@ -456,7 +456,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    ../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	done
-	for PDEF_LEVELS in ${PDEF_LEVELS_RED[@]} ; do
+	for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
 	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
 	    DIR_IN=../../ml_plev/${HGRID}x${PDEF}/tstep
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
@@ -509,7 +509,7 @@ date
 #    echo "#"
 #    #
 #    DIR_IN_LIST=( )
-#    PDEF=$( get_pdef ${PDEF_LEVELS_RED[0]} ) || exit 1
+#    PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
 #    for KEY in ${KEY_LIST[@]} ; do
 #	for HGRID in ${HGRID_LIST[@]} ; do
 #	    for DIR_IN in \
