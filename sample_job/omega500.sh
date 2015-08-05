@@ -1,17 +1,22 @@
 #!/bin/sh
+# for regime analysis such as Bony and Dufresne (2004)
 #
-# for standard analysis and web archive
-#
+# Do not edit below two lines: Load common.sh if it exists in the same directory
+DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.sh
+[ -f "${DIR_SCRIPT}/common.sh" ] && . ${DIR_SCRIPT}/common.sh
 
-#----- general -----#
-OVERWRITE="no"
+#----- XDEF/YDEF
+HGRID_LIST=( 144x72 zmean_72 )
+#HGRID_LIST=( 144x72 zmean_72_p500 )  # legacy expression
 
-#----- X/Y/Z/T/V -----#
-HGRID_LIST=( 144x72 zmean_72_p500 )  # standard
+#----- ZDEF(pressure)
+PDEF_LEVELS_RED[0]="500"
+
+#----- TDEF
 TGRID_LIST=( tstep monthly_mean )
-
 START_YMD=19780601 ; ENDPP_YMD=19780605
 
+#----- VAR
 VARS=( \
     ms_pres \
     ms_tem  \
@@ -19,18 +24,8 @@ VARS=( \
     ms_omega \
     )
 
-VARS_TSTEP=( ${VARS[@]} )           # for tstep
-VARS_TSTEP_1=( ${VARS_TSTEP[@]} )   # reduce_grid.sh
-VARS_TSTEP_2_1=( ${VARS_TSTEP[@]} ) # z2pre.sh (multi level)
-VARS_TSTEP_2_3=( ms_omega )         # plev_omega.sh
-VARS_TSTEP_3=( ${VARS_TSTEP[@]} )   # zonal_mean.sh
-
-#----- pressure levels -----#
-#
-# for high-top NICAM
-#PDEF_LEVELS_RED[0]="1000,925,850,775,700,600,500,400,300,250,200,150,100,70,50,30,20,10,7,5,3,2,1,0.7,0.5,0.3,0.2,0.1,0.07,0.05,0.03,0.02,0.01"
-#
-# for comparison with ERA-Interim
-#PDEF_LEVELS_RED[0]="1000,975,950,925,900,875,850,825,800,775,750,700,650,600,550,500,450,400,350,300,250,225,200,175,150,125,100,70,50,30,20,10,7,5,3,2,1"
-
-PDEF_LEVELS_RED[0]="500"
+#----- Analysis flag
+FLAG_TSTEP_REDUCE=1
+FLAG_TSTEP_Z2PRE=1
+FLAG_TSTEP_PLEVOMEGA=1
+FLAG_TSTEP_ZM=1
