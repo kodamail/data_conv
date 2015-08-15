@@ -73,7 +73,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	    DIR_IN_NEW=$( echo "${DIR_IN}" | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} XYDEF=${HGRID} ) || exit 1
 	    #
-	    ./reduce_grid2.sh ${START_YMD} ${ENDPP_YMD} \
+	    ./reduce_grid.sh ${START_YMD} ${ENDPP_YMD} \
 		${DIR_IN_NEW} ${DIR_OUT} \
 		${HGRID} ${OVERWRITE} ${VAR} || exit 1
 	    #
@@ -469,7 +469,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 	    #
 	    if [ "${PERIOD}" = "monthly_mean" ] ; then
-		./monthly_mean3.sh ${START_YMD} ${ENDPP_YMD} \
+		./monthly_mean.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${OVERWRITE} ${VAR} || exit 1
 	    else

@@ -16,6 +16,8 @@ if [ ${#JOB_LIST[@]} -eq 0 ] ; then
 fi
 
 for JOB in ${JOB_LIST[@]} ; do
+    [ "${JOB}" != "${JOB%common.sh}" -o "${JOB}" != "${JOB%sh~}" ] && continue
+    
     echo "#======================================#"
     echo "#"
     echo "# ${JOB} starts."
