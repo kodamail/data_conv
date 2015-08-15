@@ -47,7 +47,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
     if [ -f "${OUTPUT_CTL}" ] ; then
-        FLAG=( $( exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+        FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
             echo "info: Output data already exist."
             continue
@@ -61,7 +61,7 @@ for VAR in ${VAR_LIST[@]} ; do
         echo "warning: ${INPUT_CTL} does not exist."
         continue
     fi
-    FLAG=( $( exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
     if [ "${FLAG[0]}" != "ok" ] ; then
         echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
         continue
