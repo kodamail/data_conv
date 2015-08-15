@@ -160,16 +160,18 @@ for VAR in ${VAR_LIST[@]} ; do
         #----- combine necessary input file
         #
         echo "YMD=${YMD}"
-        get_data.sh -v ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
-            -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
+#        get_data.sh -v ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
+#            -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
 	#
         #----- zonal mean
 	#	
 	NOTHING=0
 	cd ${TEMP_DIR}
-	let NUM=YDEF*ZDEF*TDEF_FILE
-	${BIN_ZONAL_MEAN} dummy ${VAR}_${YMD}.grd.in ${VAR}_${YMD}.grd \
-            ${XDEF} ${NUM} -0.99900e+35 || exit 1
+#	let NUM=YDEF*ZDEF*TDEF_FILE
+#	${BIN_ZONAL_MEAN} dummy ${VAR}_${YMD}.grd.in ${VAR}_${YMD}.grd \
+#            ${XDEF} ${NUM} -0.99900e+35 || exit 1
+	grads_zonal_mean.sh ../${INPUT_CTL} ${VAR} ${VAR}_${YMD}.grd -ymd "(${YMD}:${YMDPP}]" > temp.log \
+	    || { cat temp.log ; echo "error" ; exit 1 ; }
 	#
 	mv ${VAR}_${YMD}.grd ../${OUTPUT_DATA} || exit 1
 	cd - > /dev/null || exit 1
