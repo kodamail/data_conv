@@ -1,8 +1,6 @@
 #
 # Example:
 #   . common.sh 
-#   create_temp
-#   trap "finish zonal_mean.sh" 0
 #
 # Note: Do not edit common.sh. The variables can be overwritten by usr/*.sh
 #
@@ -19,7 +17,7 @@ BIN_Z2PRE=${DIR_NICAM}/z2pre
 #BIN_GRADS_CTL=grads_ctl.pl
 
 BIN_DIFF_PATH=diff-path
-BIN_ZONAL_MEAN=zonal_mean
+BIN_ZONAL_MEAN=zonal_mean  # -> use GrADS?
 
 
 # default job parameters
