@@ -27,6 +27,7 @@ FLAG_TSTEP_PLEVOMEGA=0
 FLAG_TSTEP_ISCCP3CAT=0
 FLAG_TSTEP_ZM=0
 
+OVERWRITE="no"
 #############################################################
 
 . usr/common.sh

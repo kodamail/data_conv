@@ -341,8 +341,8 @@ DIR_IN_LIST=( )
 for HGRID in ${HGRID_LIST[@]} ; do
     [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
     for DIR_IN in \
-	../../{ll,ol,ml}/${HGRID}/tstep          \
-	../../ml_zlev/${HGRID}x${ZDEF_NAT}/tstep \
+	../../{ll,ol,sl}/${HGRID}/tstep      \
+	../../ml_zlev/${HGRID}x${ZDEF}/tstep \
 	../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ; do
 	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
     done
@@ -452,7 +452,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     for HGRID in ${HGRID_LIST[@]} ; do
 	for DIR_IN in \
 	    ../../{ll,ol,ml}/${HGRID}/tstep          \
-	    ../../ml_zlev/${HGRID}x${ZDEF_NAT}/tstep \
+	    ../../ml_zlev/${HGRID}x${ZDEF}/tstep \
 	    ../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	done
