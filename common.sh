@@ -16,7 +16,7 @@ BIN_Z2PRE=${DIR_NICAM}/z2pre
 
 #BIN_GRADS_CTL=grads_ctl.pl
 
-BIN_DIFF_PATH=diff-path
+#BIN_DIFF_PATH=diff-path
 #BIN_ZONAL_MEAN=zonal_mean  # -> use GrADS?
 
 
