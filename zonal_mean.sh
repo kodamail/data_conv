@@ -156,22 +156,18 @@ for VAR in ${VAR_LIST[@]} ; do
             rm -f ${OUTPUT_DATA}
         fi
         [ "${OVERWRITE}" = "rm" -o "${OVERWRITE}" = "dry-rm" ] && exit
-        #
-        #----- combine necessary input file
-        #
-        echo "YMD=${YMD}"
-#        get_data.sh -v ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
-#            -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
 	#
         #----- zonal mean
 	#	
+        echo "YMD=${YMD}"
 	NOTHING=0
 	cd ${TEMP_DIR}
-#	let NUM=YDEF*ZDEF*TDEF_FILE
-#	${BIN_ZONAL_MEAN} dummy ${VAR}_${YMD}.grd.in ${VAR}_${YMD}.grd \
-#            ${XDEF} ${NUM} -0.99900e+35 || exit 1
-	grads_zonal_mean.sh ../${INPUT_CTL} ${VAR} ${VAR}_${YMD}.grd -ymd "(${YMD}:${YMDPP}]" > temp.log \
-	    || { cat temp.log ; echo "error" ; exit 1 ; }
+	if [ ${VERBOSE} -ge 1 ] ; then
+	    grads_zonal_mean.sh ${VERBOSE_OPT} ../${INPUT_CTL} ${VAR} ${VAR}_${YMD}.grd -ymd "(${YMD}:${YMDPP}]" || exit 1
+	else
+	    grads_zonal_mean.sh ${VERBOSE_OPT} ../${INPUT_CTL} ${VAR} ${VAR}_${YMD}.grd -ymd "(${YMD}:${YMDPP}]" > temp.log \
+		|| { cat temp.log ; echo "error" ; exit 1 ; }
+	fi
 	#
 	mv ${VAR}_${YMD}.grd ../${OUTPUT_DATA} || exit 1
 	cd - > /dev/null || exit 1
@@ -182,3 +178,4 @@ done  # variable loop
 
 [ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 echo "$0 normally finished."
+echo

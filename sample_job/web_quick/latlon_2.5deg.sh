@@ -18,7 +18,6 @@ VARS=( \
     oa_sst       \
     sa_lwu_toa   \
     sa_lwu_toa_c \
-    sa_slp       \
     sa_swd_sfc   \
     sa_swu_sfc   \
     sa_swd_toa   \

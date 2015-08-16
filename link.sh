@@ -81,7 +81,6 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    fi
 	fi
 
-	#
 	if [ "${ZDEF}" = "1" -o "${TAG}" = "ll" ] ; then
 	    OUTPUT_DIR=../../${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
 	else
@@ -89,14 +88,14 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	fi 
 	mkdir -p ${OUTPUT_DIR}
 	touch ${OUTPUT_DIR}/_locked    # raw data flag
-	#
+
 	if [ "${INPUT_TIME}" = "tstep" ] ; then
 	    OUTPUT_DIR2=$( echo "${OUTPUT_DIR}" | sed -e "s|/${PERIOD}/|/tstep/|" )
 	    mkdir -p ${OUTPUT_DIR2%/*}
 	    rm -f ${OUTPUT_DIR2}
 	    ln -s ../${PERIOD}/${VAR} ${OUTPUT_DIR2}
 	fi
-	#
+
 	if [ ${#CHSUB_LIST[@]} -gt 0 ] ; then
 	    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
 	    sed ${INPUT_CTL} -e "s|^DSET .*$|DSET ^%ch/${VAR}.${EXT}|i" \
@@ -109,7 +108,6 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 		    [ ${USE_OLD} -eq 1 ] && continue
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}
 		fi
-#		echo ${CHSUB}
 		INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB}${INPUT_DATA_TEMPLATE_TAIL}
 		if [ ! -f ${INPUT_DATA} ] ; then
 		    echo "    info: break at ${CHSUB}."
@@ -121,19 +119,18 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 		# just for once
 		if [ "${OUTPUT_DATA_TEMPLATE}" = "" ] ; then
 		    INPUT_DIR_DATA=${INPUT_DATA%/*}
-		    DIFF_DIR=$( ${BIN_DIFF_PATH} ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
+		    DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
 		    DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}|%ch|g" )
 		    OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR}.${EXT}
 		    OUTPUT_DATA_TEMPLATE_HEAD=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
 		    OUTPUT_DATA_TEMPLATE_TAIL=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
 		fi
-		#
+
 		ln -s ${OUTPUT_DATA_TEMPLATE_HEAD}${CHSUB}${OUTPUT_DATA_TEMPLATE_TAIL} ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} || exit 1
-		#
 	    done
 	else
 	    # just link all files/dirs
-	    LINK_DIR=$( ${BIN_DIFF_PATH} ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
+	    LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
 	    FILE_LIST=$( ls ${INPUT_DIR_CTL_CHILD} )
 	    for FILE in ${FILE_LIST[@]} ; do
 		rm -f ${OUTPUT_DIR}/${FILE}

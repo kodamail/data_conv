@@ -1,31 +1,27 @@
 #!/bin/sh
-# for regime analysis such as Bony and Dufresne (2004)
+# for standard analysis and web archive
 #
 # Do not edit below two lines: Load common.sh if it exists in the same directory
 DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.sh
 [ -f "${DIR_SCRIPT}/common.sh" ] && . ${DIR_SCRIPT}/common.sh
 
 #----- XDEF/YDEF
-HGRID_LIST=( 144x72 zmean_72 )
-#HGRID_LIST=( 144x72 zmean_72_p500 )  # legacy expression
+HGRID_LIST=( 144x72 )
 
-#----- ZDEF(pressure)
-PDEF_LEVELS_LIST[0]="500"
+#----- ZDEF(altitude)
+ZDEF=38
 
 #----- TDEF
-TGRID_LIST=( tstep monthly_mean )
-START_YMD=19780601 ; ENDPP_YMD=19780701
+TGRID_LIST=( tstep )
+#START_YMD=20040601 ; ENDPP_YMD=20040701  # normally given by common.sh
 
 #----- VAR
 VARS=( \
     ms_pres \
     ms_tem  \
-    ms_w    \
-    ms_omega \
+    ms_u    \
     )
 
 #----- Analysis flag
 FLAG_TSTEP_REDUCE=1
-FLAG_TSTEP_Z2PRE=1
-FLAG_TSTEP_PLEVOMEGA=1
-FLAG_TSTEP_ZM=1
+

@@ -5,8 +5,8 @@
 #
 # necessary external library
 #
-export PATH=/cwork5/kodama/program/sh/bash_common/release-20150815:${PATH}
-export PATH=/cwork5/kodama/program/sh/grads_ctl/release-20150815:${PATH}
+export PATH=/cwork5/kodama/program/sh/bash_common/release-20150816:${PATH}
+export PATH=/cwork5/kodama/program/sh/grads_ctl/release-20150816:${PATH}
 
 . bash_common.sh
 
@@ -22,3 +22,9 @@ XDEF_NAT=2560
 YDEF_NAT=1280
 ZDEF_NAT=38
 ZDEF_ISCCP=49
+
+#
+# for debug
+#
+VERBOSE=0
+#VERBOSE=1

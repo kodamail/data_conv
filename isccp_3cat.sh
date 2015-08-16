@@ -192,7 +192,12 @@ while( t <= ${TMAX} )
 endwhile
 'quit'
 EOF
-	grads -blc temp.gs > /dev/null || exit 1
+	if [ ${VERBOSE} -ge 1 ] ; then
+	    [ ${VERBOSE} -ge 2 ] && cat temp.gs
+	    grads -blc temp.gs || exit 1
+	else
+	    grads -blc temp.gs > temp.log || { cat temp.log ; exit 1 ; }
+	fi
 	#
 	mv ${VAR}_${YMD}.grd ../${OUTPUT_DIR}/${VAR}/${YEAR}/ || exit 1
 	mv temp.gs           ../${OUTPUT_DIR}/${VAR}/log/temp_${YMD}.gs
@@ -204,3 +209,4 @@ done  # variable loop
 
 [ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 echo "$0 normally finished."
+echo

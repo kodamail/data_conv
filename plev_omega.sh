@@ -233,3 +233,4 @@ done  # variable loop
 
 [ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 echo "$0 normally finished."
+echo

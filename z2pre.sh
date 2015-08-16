@@ -168,9 +168,9 @@ for VAR in ${VAR_LIST[@]} ; do
         #----- combine necessary input file
         #
         echo "YMD=${YMD}"
-        grads_get_data.sh -v ${INPUT_CTL}      ${VAR}      ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
+        grads_get_data.sh ${VERBOSE_OPT} ${INPUT_CTL}      ${VAR}      ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
             -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
-        grads_get_data.sh -v ${INPUT_PRES_CTL} ${VAR_PRES} ${TEMP_DIR}/${VAR_PRES}_${YMD}.grd.in \
+        grads_get_data.sh ${VERBOSE_OPT} ${INPUT_PRES_CTL} ${VAR_PRES} ${TEMP_DIR}/${VAR_PRES}_${YMD}.grd.in \
             -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
 	#
 	#----- z2pre
@@ -195,7 +195,12 @@ for VAR in ${VAR_LIST[@]} ; do
     outsuffix = '_${YMD}.grd',                 ! suffix of output data
 /
 EOF
-	${BIN_Z2PRE} || exit 1
+	if [ ${VERBOSE} -ge 1 ] ; then
+	    [ ${VERBOSE} -ge 2 ] && cat z2pre.cnf
+	    ${BIN_Z2PRE} || exit 1
+	else
+	    ${BIN_Z2PRE} > /dev/null || exit 1
+	fi
 	#
 	mv ${VAR}_${YMD}.grd ../${OUTPUT_DIR}/${VAR}/${YEAR}/ || exit 1
 	mv z2pre.cnf         ../${OUTPUT_DIR}/${VAR}/log/z2pre_${YMD}.cnf
@@ -208,3 +213,4 @@ done  # variable loop
 
 [ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 echo "$0 normally finished."
+echo

@@ -50,12 +50,12 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of output data
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    YM_START=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || exit 1
+    YM_STARTMM=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || exit 1
     YM_END=$( date -u --date "${ENDPP_YMD} 1 month ago"  +%Y%m ) || exit 1
 
     if [ -f "${OUTPUT_CTL}" ] ; then
-#        FLAG=( $( exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-        FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "[${YM_START}15:${YM_END}15]" ) ) || exit 1
+	YM_TMP=$(     date -u --date "${YM_STARTMM}01 1 month" +%Y%m ) || exit 1
+        FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "[${YM_TMP}15:${YM_END}15]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
             echo "info: Output data already exist."
             continue
@@ -117,7 +117,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
     #  month loop (for each file)
     #========================================#
-    YM=${YM_START}
+    YM=${YM_STARTMM}
     while [ ${YM} -lt ${YM_END} ] ; do
         #
         #----- set/proceed date -----#
@@ -198,7 +198,12 @@ endwhile
 'disable fwrite'
 'quit'
 EOF
-		grads -blc temp.gs > /dev/null || exit 1 #> grads.log
+		if [ ${VERBOSE} -ge 1 ] ; then
+		    [ ${VERBOSE} -ge 2 ] && cat temp.gs
+		    grads -blc temp.gs || exit 1
+		else
+		    grads -blc temp.gs > temp.log || { cat temp.log ; exit 1 ; }
+		fi
 		#
 		cat temp2.grd >> temp.grd || exit 1
 		rm temp2.grd temp.gs
@@ -214,3 +219,4 @@ done  # variable loop
 
 [ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
 echo "$0 normally finished."
+echo

@@ -28,10 +28,14 @@ FLAG_TSTEP_ISCCP3CAT=0
 FLAG_TSTEP_ZM=0
 
 OVERWRITE="no"
+VERBOSE=0
 #############################################################
 
 . usr/common.sh
 
+VERBOSE_OPT=""
+[ ${VERBOSE} -ge 1 ] && VERBOSE_OPT="-v"
+[ ${VERBOSE} -ge 2 ] && VERBOSE_OPT="-v -v"
 
 # convert ${TAG}/${HORIZONTAL}/${TIME} 
 function conv_dir()
