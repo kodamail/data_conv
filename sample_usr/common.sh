@@ -5,12 +5,12 @@
 #
 # necessary external library
 #
-export PATH=/cwork5/kodama/program/sh/bash_common/release-20150816:${PATH}
-export PATH=/cwork5/kodama/program/sh/grads_ctl/release-20150816:${PATH}
+export PATH=/home/hoge/bash_common/release-20150816:${PATH}
+export PATH=/home/hoge/grads_ctl/release-20150816:${PATH}
 
 . bash_common.sh
 
-DIR_NICAM=/cwork5/kodama/NICAM_src/NICAM_20150109/NICAM/bin
+DIR_NICAM=/home/hoge/NICAM_20150109/NICAM/bin
 BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
