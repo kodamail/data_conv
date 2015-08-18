@@ -14,12 +14,6 @@ BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 
-#BIN_GRADS_CTL=grads_ctl.pl
-
-#BIN_DIFF_PATH=diff-path
-#BIN_ZONAL_MEAN=zonal_mean  # -> use GrADS?
-
-
 # default job parameters
 FLAG_TSTEP_REDUCE=0
 FLAG_TSTEP_Z2PRE=0

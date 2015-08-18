@@ -6,7 +6,7 @@
 # necessary external library
 #
 export PATH=/home/hoge/bash_common/release-20150816:${PATH}
-export PATH=/home/hoge/grads_ctl/release-20150816:${PATH}
+export PATH=/home/hoge/grads_ctl/release-20150818:${PATH}
 
 . bash_common.sh
 
