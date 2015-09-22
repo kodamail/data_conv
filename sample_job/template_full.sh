@@ -14,7 +14,7 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 #   AAAxBBB  : (XDEF,YDEF)=(AAA,BBB)
 #   zonal_BBB: zonal mean, YDEF=BBB
 #
-###HGRID_LIST=( 2560x1280 144x72 288x145 zmean_72x37 zmean_145x37 )
+#HGRID_LIST=( 2560x1280 144x72 288x145 zmean_72 zmean_145 )
 HGRID_LIST=( 144x72 )
 
 #
