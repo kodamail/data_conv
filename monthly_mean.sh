@@ -143,7 +143,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	    #
 	    OUTPUT_DATA=${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YEAR}${MONTH}${STR_ENS}.grd
 	    #
-	    [ ! -d ${OUTPUT_DIR}/${VAR} ] && mkdir -p ${OUTPUT_DIR}/${VAR}
+#	    [ ! -d ${OUTPUT_DIR}/${VAR} ] && mkdir -p ${OUTPUT_DIR}/${VAR}
 	    if [ -f ${OUTPUT_DATA} ] ; then
 		SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' ) || exit 1
 		SIZE_OUT_EXACT=$( echo "4*${XDEF}*${YDEF}*${ZDEF}*${VDEF}" | bc ) || exit 1
