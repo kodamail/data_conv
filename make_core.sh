@@ -451,7 +451,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     DIR_IN_LIST=( )
     for HGRID in ${HGRID_LIST[@]} ; do
 	for DIR_IN in \
-	    ../../{ll,ol,ml}/${HGRID}/tstep          \
+	    ../../{ll,ol,sl}/${HGRID}/tstep          \
 	    ../../ml_zlev/${HGRID}x${ZDEF}/tstep \
 	    ../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
@@ -474,9 +474,9 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 		    ${OVERWRITE} ${VAR} || exit 1
 	    else
 		SA=
-		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
-		echo "error! multi_step3.sh should be re-written!"
-		exit 1
+# -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
+#		echo "error! multi_step3.sh should be re-written!"
+#		exit 1
 		./multi_step3.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${PERIOD} ${OVERWRITE} ${VAR} ${SA} || exit 1

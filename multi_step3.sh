@@ -1,64 +1,44 @@
 #!/bin/sh
 #
+# *_step or *_mean
+#
 # WARNING: monthly mean is not supported (probably also in future!)
 #
-export F_UFMTENDIAN="big"
-export LANG=en
+. ./common.sh || exit 1
 
-START_DATE=$1    # date (YYYYMMDD)
-ENDPP_DATE=$2    # date (YYYYMMDD)
-INPUT_DIR=$3
-OUTPUT_DIR=$4
+echo "########## $0 start ##########"
+set -x
+START_YMD=$1      # YYYYMMDD (start day of analysis period)
+ENDPP_YMD=$2      # YYYYMMDD (end+1 day of analysis period)
+INPUT_DIR=$3      # input dir
+OUTPUT_DIR=$4     # output dir
 OUTPUT_PERIOD=$5  # e.g. 1dy_mean, 6hr_tstep
-OVERWRITE=$6   # optional
-TARGET_VAR=$7  # optional
-SA=$8          # optional, s:snapshot a:average
-
-
-#START_DATE=19780601
-#ENDPP_DATE=19780701
-#INPUT_DIR=../advanced/MIM-0.36r2/zmean_72x18/tstep/sta_tra
-#OUTPUT_DIR=../advanced/MIM-0.36r2/zmean_72x18/1dy_mean/sta_tra
-#OUTPUT_PERIOD=1dy_mean
-#OVERWRITE=yes
-#TARGET_VAR=zonal
-#SA=s
-
-#INPUT_DIR=../sl/144x72/tstep
-#OUTPUT_DIR=./temp
-#TARGET_VAR=sa_t2m
-
-echo "########## multi_step3.sh start ##########"
-echo "1: $1"
-echo "2: $2"
-echo "3: $3"
-echo "4: $4"
-echo "5: $5"
-echo "6: $6"
-echo "7: $7"
-echo "8: $8"
+OVERWRITE=$6      # overwrite option (optional)
+TARGET_VAR=$7     # variable name (optional)
+SA=$8             # optional, s:snapshot a:average
+set +x
 echo "##########"
 
-. common.sh 
-create_temp
-trap "finish multi_step3.sh" 0
+create_temp || exit 1
+TEMP_DIR=${BASH_COMMON_TEMP_DIR}
+trap "finish" 0
 
-if [   "${OVERWRITE}" != ""       \
-    -a "${OVERWRITE}" != "yes"    \
-    -a "${OVERWRITE}" != "no"     \
-    -a "${OVERWRITE}" != "dry-rm" \
-    -a "${OVERWRITE}" != "rm"  ] ; then
-    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet"
+if [   "${OVERWRITE}" != ""                                  \
+    -a "${OVERWRITE}" != "yes"    -a "${OVERWRITE}" != "no"  \
+    -a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm"  ] ; then
+    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet." >&2
     exit 1
 fi
 
 if [ "${TARGET_VAR}" = "" ] ; then
-    VAR_LIST=( $( ls ${INPUT_DIR}/ ) )
+    VAR_LIST=( $( ls ${INPUT_DIR}/ ) ) || exit 1
 else
     VAR_LIST=( ${TARGET_VAR} )
 fi
 
-BIN_EXIST_DATA=exist_data.sh
+NOTHING=1
+
+#BIN_EXIST_DATA=exist_data.sh
 #BIN_EXIST_DATA=/cwork5/kodama/program/sh_lib/grads_ctl/dev/exist_data.sh
 
 #
@@ -77,12 +57,24 @@ OUTPUT_TDEF_INCRE=$( period_2_incre ${OUTPUT_PERIOD} ) # native
 OUTPUT_TDEF_INCRE_SEC=$( echo ${OUTPUT_TDEF_INCRE} | sed -e "s/ days/\*24\*3600/" -e "s/ hours/\*3600/" | bc )
 OUTPUT_TDEF_INCRE_GRADS=$( echo "${OUTPUT_TDEF_INCRE}" | sed -e "s/ hours/hr/" -e "s/ days/dy/" )
 
-
 NOTHING=1
-#=====================================#
-#            variable loop            #
-#=====================================#
+#============================================================#
+#
+#  variable loop
+#
+#============================================================#
 for VAR in ${VAR_LIST[@]} ; do
+    #
+    #----- check whether output dir is write-protected
+    #
+    if [ -f "${OUTPUT_DIR}/${VAR}/_locked" ] ; then
+        echo "info: ${OUTPUT_DIR} is locked."
+        continue
+    fi
+
+echo "ok"
+exit 1
+
     #echo "VAR = ${VAR}"
     #
     # check output dir
