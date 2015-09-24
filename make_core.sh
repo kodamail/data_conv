@@ -477,7 +477,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
 #		echo "error! multi_step3.sh should be re-written!"
 #		exit 1
-		./multi_step3.sh ${START_YMD} ${ENDPP_YMD} \
+		./multi_step.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${PERIOD} ${OVERWRITE} ${VAR} ${SA} || exit 1
 	    fi
