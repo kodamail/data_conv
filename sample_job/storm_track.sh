@@ -26,20 +26,20 @@ VARS=( \
     ms_tem       \
     ss_slp       \
 # below for composite
-    dfq_isccp2   \
-    sa_cldi      \
-    sa_cldw      \
-    sa_cld_frac  \
-    sa_evap      \
-    sa_lwu_toa   \
-    sa_lwu_toa_c \
-    sa_slp       \
-    ss_slp       \
-    sa_swu_toa   \
-    sa_swu_toa_c \
-    sa_tppn      \
-    sa_u10m      \
-    sa_v10m      \
+#    dfq_isccp2   \
+#    sa_cldi      \
+#    sa_cldw      \
+#    sa_cld_frac  \
+#    sa_evap      \
+#    sa_lwu_toa   \
+#    sa_lwu_toa_c \
+#    sa_slp       \
+#    ss_slp       \
+#    sa_swu_toa   \
+#    sa_swu_toa_c \
+#    sa_tppn      \
+#    sa_u10m      \
+#    sa_v10m      \
     )
 
 #----- Analysis flag
