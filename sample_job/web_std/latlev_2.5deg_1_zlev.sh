@@ -8,12 +8,28 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 #----- XDEF/YDEF
 HGRID_LIST=( 144x72 )
 
+#----- ZDEF(altitude)
+ZDEF=38
+
 #----- TDEF
-TGRID_LIST=( tstep monthly_mean )
+TGRID_LIST=( tstep )
 
 #----- VAR
 VARS=( \
-    sa_tppn      \
+    ms_pres \
+    ms_tem  \
+    ms_u    \
+    ms_v    \
+    ms_w    \
+    ms_rh   \
+    ms_qv   \
+    ms_qc   \
+    ms_qi   \
+    ms_qr   \
+    ms_qs   \
+    ms_qg   \
+    ms_lwhr \
+    ms_swhr \
     )
 
 #----- Analysis flag

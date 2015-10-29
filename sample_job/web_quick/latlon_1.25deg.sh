@@ -6,14 +6,14 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 [ -f "${DIR_SCRIPT}/common.sh" ] && . ${DIR_SCRIPT}/common.sh
 
 #----- XDEF/YDEF
-HGRID_LIST=( 144x72 )
+HGRID_LIST=( 288x145 )
 
 #----- TDEF
 TGRID_LIST=( tstep monthly_mean )
 
 #----- VAR
 VARS=( \
-    sa_tppn      \
+    sa_t2m       \
     )
 
 #----- Analysis flag

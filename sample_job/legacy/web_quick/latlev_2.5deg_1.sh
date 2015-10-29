@@ -8,13 +8,20 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 #----- XDEF/YDEF
 HGRID_LIST=( 144x72 )
 
+#----- ZDEF(altitude)
+ZDEF=38
+
 #----- TDEF
-TGRID_LIST=( tstep monthly_mean )
+TGRID_LIST=( tstep )
+#START_YMD=20040601 ; ENDPP_YMD=20040701  # normally given by common.sh
 
 #----- VAR
 VARS=( \
-    sa_tppn      \
+    ms_pres \
+    ms_tem  \
+    ms_u    \
     )
 
 #----- Analysis flag
 FLAG_TSTEP_REDUCE=1
+
