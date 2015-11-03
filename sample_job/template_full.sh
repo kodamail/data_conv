@@ -61,6 +61,8 @@ FLAG_TSTEP_PLEVOMEGA=1
 FLAG_TSTEP_ISCCP3CAT=1
 FLAG_TSTEP_ZM=1
 
+FLAG_MM_ZM=1  # zonal mean AFTER monthly-mean (mm_zmean_*)
+
 #
 #----- vertical level in altitude
 #

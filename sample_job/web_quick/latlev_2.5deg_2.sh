@@ -6,7 +6,8 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 [ -f "${DIR_SCRIPT}/common.sh" ] && . ${DIR_SCRIPT}/common.sh
 
 #----- XDEF/YDEF
-HGRID_LIST=( 144x72 zmean_72 )
+#HGRID_LIST=( 144x72 zmean_72 )
+HGRID_LIST=( 144x72 )
 
 #----- ZDEF(pressure)
 # for comparison with ERA-Interim
@@ -25,5 +26,6 @@ VARS=( \
 
 #----- Analysis flag
 FLAG_TSTEP_Z2PRE=1
-FLAG_TSTEP_ZM=1
+#FLAG_TSTEP_ZM=1
 
+FLAG_MM_ZM=1

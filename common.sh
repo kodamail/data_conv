@@ -20,6 +20,7 @@ FLAG_TSTEP_Z2PRE=0
 FLAG_TSTEP_PLEVOMEGA=0
 FLAG_TSTEP_ISCCP3CAT=0
 FLAG_TSTEP_ZM=0
+FLAG_MM_ZM=0
 
 OVERWRITE="no"
 VERBOSE=0
@@ -49,6 +50,11 @@ function conv_dir()
 	  # 320x160      -> zmean_160
 	  # 320x160_p850 -> zmean_160_p850
 	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/zmean_|" )
+	done
+
+    elif [ "${TARGET}" = "XDEF" -a ${VALUE} = "MMZMEAN" ] ; then
+	for KEY in ${KEY_LIST[@]} ; do
+	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/mm_zmean_|" )
 	done
 
     elif [ "${TARGET}" = "XYDEF" ] ; then

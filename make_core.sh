@@ -485,8 +485,75 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     done
 done
 
+
+
+#############################################################
+#
+# Basic Analysis (after monthly-mean)
+#
+#############################################################
+VARS_MM=( )
+for TGRID in ${TGRID_LIST[@]} ; do
+    if [ "${TGRID}" = "monthly_mean" ] ; then
+	VARS_MM=( all )  # default variables
+	VARS_MM=( $( expand_vars ${#VARS_MM[@]} ${VARS_MM[@]} ) ) || exit 1
+	VARS_MM=( $( dep_var     ${#VARS_MM[@]} ${VARS_MM[@]} \
+                                 ${#VARS[@]}    ${VARS[@]} ) ) || exit 1
+	echo "############################################################"
+	echo "#"
+	echo "# Basic Analysis (after monthly-mean)"
+	echo "#"
+	echo "############################################################"
+	echo "#"
+	break
+    fi
+done
+#
+########## zonal mean for monthly-mean data ##########
+#
+VARS_ANA=( )
+if [ ${FLAG_MM_ZM} -eq 1 ] ; then
+    VARS_ANA=( all )
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]} ${VARS_ANA[@]} \
+                              ${#VARS_MM[@]}  ${VARS_MM[@]} ) ) || exit 1
+fi
+DIR_IN_LIST=( )
+for HGRID in ${HGRID_LIST[@]} ; do
+    [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
+    for DIR_IN in \
+	../../{ll,ol,sl}/${HGRID}/monthly_mean      \
+	../../ml_zlev/${HGRID}x${ZDEF}/monthly_mean \
+	../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/monthly_mean ; do
+	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
+    done
+    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
+	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	DIR_IN=../../ml_plev/${HGRID}x${PDEF}/monthly_mean
+	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
+    done
+done
+for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
+	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
+	[ ! -f "${INPUT_CTL}" ] && continue
+#	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
+#	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
+#	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
+	DIR_OUT=$( conv_dir ${DIR_IN} XDEF=MMZMEAN ) || exit 1
+	#
+	./monthly_zonal_mean.sh ${START_YMD} ${ENDPP_YMD} \
+	    ${DIR_IN} ${DIR_OUT} \
+	    ${OVERWRITE} ${VAR} || exit 1
+    done
+done 
+
+
+
+
 echo "$0 normally finished."
 date
+exit
 
 # below to be modified
 
