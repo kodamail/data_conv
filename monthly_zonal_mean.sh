@@ -125,7 +125,7 @@ for VAR in ${VAR_LIST[@]} ; do
             #
             if [ -f ${OUTPUT_DATA} ] ; then
                 SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' ) || exit 1
-                SIZE_OUT_EXACT=$( echo "4*${XDEF}*1*${ZDEF}*${VDEF}" | bc ) || exit 1
+                SIZE_OUT_EXACT=$( echo "4*${YDEF}*${ZDEF}" | bc ) || exit 1
                 if [ ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} -a "${OVERWRITE}" != "yes" \
                     -a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
                     continue 2
