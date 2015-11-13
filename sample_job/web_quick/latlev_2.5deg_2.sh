@@ -19,7 +19,7 @@ TGRID_LIST=( tstep monthly_mean )
 
 #----- VAR
 VARS=( \
-    ms_pres \
+#    ms_pres \
     ms_tem  \
     ms_u    \
     )
