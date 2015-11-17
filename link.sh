@@ -4,8 +4,8 @@
 # Before execution, check
 # -VAR="?l_*" and "dfq_isccp2" is snapshot or mean
 #
-. ./common.sh       || exit 1
-. ./usr/cnf_link.sh || exit 1
+. ./common.sh
+. ./usr/cnf_link.sh
 
 #----------------------------------------#
 CHSUB_BREAK_LIST=()
@@ -17,11 +17,27 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
     echo ${INPUT_DIR_CTL}
 
     if [ "${SEP_DIR_LIST[$i]}" = "1"  ] ; then
-	VAR_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) ) || exit 1
+	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl ) ) || exit 1
     else
-	VAR_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) ) || exit 1
+	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl ) ) || exit 1
     fi
-    for VAR in ${VAR_LIST[@]} ; do
+    for TMP in ${TMP_LIST[@]} ; do
+	VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
+	if [ ${VDEF} = 1 ] ; then
+	    INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
+	    VAR_LIST[${#VAR_LIST[@]}]=$( echo "${TMP}" | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) || exit 1
+	else
+	    SUBVAR_LIST=( $( grads_ctl.pl ${TMP} VARS ALL ) ) || exit 1
+	    for SUBVAR in ${SUBVAR_LIST[@]} ; do
+		INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
+		VAR_LIST[${#VAR_LIST[@]}]=${SUBVAR}
+	    done
+	fi
+    done
+
+    for(( i=0; $i<${#VAR_LIST[@]}; i=$i+1 )) ; do
+	VAR=${VAR_LIST[$i]}
+	INPUT_CTL=${INPUT_CTL_LIST[$i]}
 	echo "  ${VAR}"
         #
         # detrmine type of the variable
@@ -42,13 +58,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    echo "skip!"
 	    continue
 	fi
-	
-	if [ "${SEP_DIR_LIST[$i]}" = "1"  ] ; then
-	    INPUT_DIR_CTL_CHILD=${INPUT_DIR_CTL}/${VAR}
-	else
-	    INPUT_DIR_CTL_CHILD=${INPUT_DIR_CTL}
-	fi
-	INPUT_CTL=${INPUT_DIR_CTL_CHILD}/${VAR}.ctl
+	INPUT_DIR_CTL_CHILD=${INPUT_CTL%/*}
 	INPUT_DATA_TEMPLATE=$( grep ^DSET ${INPUT_CTL} | sed -e "s|^DSET *^||i" ) || exit 1
 	INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
 	INPUT_DATA_TEMPLATE_HEAD=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
@@ -132,10 +142,16 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    # just link all files/dirs
 	    LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
 	    FILE_LIST=$( ls ${INPUT_DIR_CTL_CHILD} )
+	    FLAG=0
 	    for FILE in ${FILE_LIST[@]} ; do
 		rm -f ${OUTPUT_DIR}/${FILE}
 		ln -s ${LINK_DIR}/${FILE} ${OUTPUT_DIR}/${FILE}
+		[ "${FILE}" = "${VAR}.ctl" ] && FLAG=1
 	    done
+	    if [ ${FLAG} -eq 0 ] ; then
+		rm -f ${OUTPUT_DIR}/${VAR}.ctl
+		ln -s ${LINK_DIR}/${INPUT_CTL##*/} ${OUTPUT_DIR}/${VAR}.ctl
+	    fi
 	fi
     done
 done
