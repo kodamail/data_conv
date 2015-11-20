@@ -14,6 +14,16 @@ BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 
+#
+# Native (i.e. finest mesh) grid data information
+#
+XDEF_NAT=-1
+YDEF_NAT=-1
+ZDEF_NAT=-1
+ZDEF_ISCCP=-1
+ZDEF_TYPE=ml_zlev
+
+
 # default job parameters
 FLAG_TSTEP_REDUCE=0
 FLAG_TSTEP_Z2PRE=0
@@ -147,7 +157,9 @@ function expand_vars()
 
     VARS_ISCCP=( $( ls ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
     VARS_LL=(    $( ls ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_ML=(    $( ls ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep 2>/dev/null ) \
+#    VARS_ML=(    $( ls ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep 2>/dev/null ) \
+#	ms_omega ms_z )
+    VARS_ML=(    $( ls ../../${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x*/tstep 2>/dev/null ) \
 	ms_omega ms_z )
     VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
