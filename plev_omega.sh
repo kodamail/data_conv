@@ -89,6 +89,15 @@ for VAR in m${VAR_W:1:1}_omega ; do
     let TDEF_FILE=60*60*24/TDEF_INCRE_SEC       # number of time step per file
     let TDEF_SEC_FILE=TDEF_INCRE_SEC*TDEF_FILE  # time in second per file
     #
+    START_HMS=$( date -u --date "${TDEF_START}" +%H%M%S )
+    TMP_H=${START_HMS:0:2}
+    TMP_M=${START_HMS:2:2}
+    let TMP_MN=TMP_H*60+TMP_M
+    if [ "${START_HMS}" = "000000" ] ; then
+	echo "It is not implemented."
+	exit 1
+    fi
+    #
     #----- generate control file (unified)
     #
     mkdir -p ${INOUT_DIR}/${VAR}/log || exit 1
