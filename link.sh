@@ -35,9 +35,9 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	fi
     done
 
-    for(( i=0; $i<${#VAR_LIST[@]}; i=$i+1 )) ; do
-	VAR=${VAR_LIST[$i]}
-	INPUT_CTL=${INPUT_CTL_LIST[$i]}
+    for(( j=0; $j<${#VAR_LIST[@]}; j=$j+1 )) ; do
+	VAR=${VAR_LIST[$j]}
+	INPUT_CTL=${INPUT_CTL_LIST[$j]}
 	echo "  ${VAR}"
         #
         # detrmine type of the variable
