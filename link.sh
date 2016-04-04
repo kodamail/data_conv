@@ -130,7 +130,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 		if [ "${OUTPUT_DATA_TEMPLATE}" = "" ] ; then
 		    INPUT_DIR_DATA=${INPUT_DATA%/*}
 		    DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
-		    DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}|%ch|g" )
+		    DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}/|%ch/|g" )
 		    OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR}.${EXT}
 		    OUTPUT_DATA_TEMPLATE_HEAD=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
 		    OUTPUT_DATA_TEMPLATE_TAIL=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
