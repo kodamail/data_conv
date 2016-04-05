@@ -1,18 +1,24 @@
 #!/bin/sh
 
 # usage: ./make.sh [ job-1 job-2 ... ]
+# usage: ./make.sh OVERWRITE=rm [ job-1 job-2 ... ]
 
 JOB_LIST=( )
+OPT=""
 while [ -n "$1" ] ; do
-    JOB_LIST=( ${JOB_LIST[@]} $1 )
+    if [ -f $1 ] ; then
+	JOB_LIST=( ${JOB_LIST[@]} $1 )
+    else
+	OPT="${OPT} $1"
+    fi
     shift
 done
 
 if [ ${#JOB_LIST[@]} -eq 0 ] ; then
     echo "usage:"
     echo "$0 job-1 job-2 ..."
+    echo "$0 OVERWRITE=rm job-1 job-2 ..."
     exit
-#    JOB_LIST=( $( ls job/*.sh 2> /dev/null ) )
 fi
 
 for JOB in ${JOB_LIST[@]} ; do
@@ -25,7 +31,7 @@ for JOB in ${JOB_LIST[@]} ; do
     echo "#======================================#"
     echo ""
 
-    ./make_core.sh ${JOB} || exit 1
+    ./make_core.sh ${JOB} ${OPT}|| exit 1
     
     echo ""
     echo "#======================================#"
