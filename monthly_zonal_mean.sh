@@ -52,7 +52,8 @@ for VAR in ${VAR_LIST[@]} ; do
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
     YM_STARTMM=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || exit 1
     YM_END=$( date -u --date "${ENDPP_YMD} 1 month ago"  +%Y%m ) || exit 1
-    if [ -f "${OUTPUT_CTL}" ] ; then
+#    if [ -f "${OUTPUT_CTL}" ] ; then
+    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
         YM_TMP=$(     date -u --date "${YM_STARTMM}01 1 month" +%Y%m ) || exit 1
         FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "[${YM_TMP}15:${YM_END}15]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
