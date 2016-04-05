@@ -34,6 +34,7 @@ FLAG_MM_ZM=0
 
 OVERWRITE="no"
 VERBOSE=0
+INC_SUBVARS="yes"
 #############################################################
 
 . usr/common.sh

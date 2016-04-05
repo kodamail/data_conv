@@ -11,7 +11,8 @@ ENDPP_YMD=$2   # YYYYMMDD (end+1 day of analysis period)
 INPUT_DIR=$3   # input dir
 OUTPUT_DIR=$4  # output dir
 OVERWRITE=$5   # overwrite option (optional)
-TARGET_VAR=$6  # variable name (optional)
+INC_SUBVARS=$6 # SUBVARS option (optional)
+TARGET_VAR=$7  # variable name (optional)
 set +x
 echo "##########"
 
@@ -75,9 +76,12 @@ for VAR in ${VAR_LIST[@]} ; do
     TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
     TDEF_START=$(     grads_ctl.pl ${INPUT_CTL} TDEF 1 ) || exit 1
     TDEF_INCRE_SEC=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit SEC | sed -e "s/SEC//" ) || exit 1
-    SUBVARS=( $(      grads_ctl.pl ${INPUT_CTL} VARS ALL ) ) || exit 1
+    SUBVARS=( ${VAR} )
+    if [ "${INC_SUBVARS}" = "yes" ] ; then
+	SUBVARS=( $( grads_ctl.pl ${INPUT_CTL} VARS ALL ) ) || exit 1
+    fi
     VDEF=${#SUBVARS[@]}
-    #                                                                                                 
+    #
     START_HMS=$( date -u --date "${TDEF_START}" +%H%M%S )
     TMP_H=${START_HMS:0:2}
     TMP_M=${START_HMS:2:2}
@@ -98,7 +102,12 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+    if [ "${INC_SUBVARS}" = "yes" ] ; then
+	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+    else
+	TMP=$( grads_ctl.pl ${INPUT_CTL} VARS | grep ^${VAR} )
+	grads_ctl.pl ${INPUT_CTL} --set "VARS 1" --set "${TMP}" > ${OUTPUT_CTL}.tmp1 || exit 1
+    fi
     #
     STR_ENS=""
     [ ${EDEF} -gt 1 ] && STR_ENS="_bin%e"

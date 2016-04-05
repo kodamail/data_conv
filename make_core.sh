@@ -483,7 +483,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    if [ "${PERIOD}" = "monthly_mean" ] ; then
 		./monthly_mean.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${OVERWRITE} ${VAR} || exit 1
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
 	    else
 		SA=
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
