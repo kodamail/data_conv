@@ -37,6 +37,7 @@ TDEF_START_FORCE="00:00Z01JUN2004"
 #
 # (if necessary) shift TDEF_START to reflect snapshot/average mode
 TDEF_START_SHIFT="yes"
+#TDEF_START_SHIFT="only_average"
 #
 # assume chsub time increment is constant in all the time range
 #FLAG_CHSUB_INCRE_CNST=0
@@ -145,20 +146,22 @@ for VAR in ${VAR_LIST[@]} ; do
     # shift time
     #   snapshot: +TDEF_INT
     #   average : +TDEF_INT/2
-    if [ "${TDEF_START_SHIFT}" = "yes" ] ; then
-#	SA=$( echo ${VAR} | cut -b 2 )
+    if [ "${TDEF_START_SHIFT}" != "" ] ; then
 	SA=${VAR:1:1}
 	if [ "${SA}" = "s" -o "${SA}" = "l" ] ; then  # snapshot
-	    TDEF_START=$( date -u --date "${TDEF_START} ${TDEF_INT_TMP} mins" +%H:%Mz%d%b%Y )
+	    if [ "${TDEF_START_SHIFT}" = "yes" ] ; then
+		TDEF_START=$( date -u --date "${TDEF_START} ${TDEF_INT_TMP} mins" +%H:%Mz%d%b%Y )
+	    fi
 	elif [ "${SA}" = "a" -o "${VAR}" = "dfq_isccp2" ] ; then  # mean
-	    TDEF_INT_TMP2=$( echo "${TDEF_INT_TMP} / 2" | bc )
-	    TDEF_START=$( date -u --date "${TDEF_START} ${TDEF_INT_TMP2} mins" +%H:%Mz%d%b%Y )
+	    if [ "${TDEF_START_SHIFT}" = "yes" -o "${TDEF_START_SHIFT}" = "only_average" ] ; then
+		TDEF_INT_TMP2=$( echo "${TDEF_INT_TMP} / 2" | bc )
+		TDEF_START=$( date -u --date "${TDEF_START} ${TDEF_INT_TMP2} mins" +%H:%Mz%d%b%Y )
+	    fi
 	else
 	    echo "SA=${SA} (VAR=${VAR}) is not supported"
 	    exit
 	fi
-    fi
-    #echo ${TDEF_START}
+    fi    
     
     if [ "${EXT}" = "ctl" ] ; then
 	sed ${DIR_FIRST}/${CTL} \
