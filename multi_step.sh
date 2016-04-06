@@ -159,34 +159,36 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    rm -f ${OUTPUT_CTL}.chsub
-    DATE=$( date -u --date "${OUTPUT_TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
-    echo "CHSUB  1  ${OUTPUT_TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    for(( d=1+${OUTPUT_TDEF_FILE}; ${d}<=${OUTPUT_TDEF}; d=${d}+${OUTPUT_TDEF_FILE} )) ; do
-        let CHSUB_MAX=d+OUTPUT_TDEF_FILE-1
-        DATE=$( date -u --date "${DATE} ${OUTPUT_TDEF_INCRE_FILE_SEC} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
-        echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    done
-    TEMPLATE_ENS=""
-    [ ${EDEF} -gt 1 ] && TEMPLATE_ENS="_bin%e"
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+        #
+	rm -f ${OUTPUT_CTL}.chsub
+	DATE=$( date -u --date "${OUTPUT_TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
+	echo "CHSUB  1  ${OUTPUT_TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	for(( d=1+${OUTPUT_TDEF_FILE}; ${d}<=${OUTPUT_TDEF}; d=${d}+${OUTPUT_TDEF_FILE} )) ; do
+            let CHSUB_MAX=d+OUTPUT_TDEF_FILE-1
+            DATE=$( date -u --date "${DATE} ${OUTPUT_TDEF_INCRE_FILE_SEC} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
+            echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	done
+	TEMPLATE_ENS=""
+	[ ${EDEF} -gt 1 ] && TEMPLATE_ENS="_bin%e"
 #    TEMPLATE=${VAR}_%ch${TEMPLATE_ENS}.grd
 #    TEMPLATE="%ch\/${VAR}${TEMPLATE_ENS}.grd"
-    TEMPLATE="%ch${TEMPLATE_ENS}.grd"
-    sed ${OUTPUT_CTL}.tmp1 \
-        -e "s|^DSET .*$|DSET \^${TEMPLATE}|" \
-	-e "/^CHSUB .*/d"  \
-	-e "s/^OPTIONS \(TEMPLATE\)*/OPTIONS TEMPLATE BIG_ENDIAN/i"  \
-	-e "s/yrev//ig" \
-	-e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
-	-e "s/^TDEF .*$/TDEF   ${OUTPUT_TDEF}  LINEAR  ${OUTPUT_TDEF_START}  ${OUTPUT_TDEF_INCRE_GRADS}/"  \
-	> ${OUTPUT_CTL}.tmp2
+	TEMPLATE="%ch${TEMPLATE_ENS}.grd"
+	sed ${OUTPUT_CTL}.tmp1 \
+            -e "s|^DSET .*$|DSET \^${TEMPLATE}|" \
+	    -e "/^CHSUB .*/d"  \
+	    -e "s/^OPTIONS \(TEMPLATE\)*/OPTIONS TEMPLATE BIG_ENDIAN/i"  \
+	    -e "s/yrev//ig" \
+	    -e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
+	    -e "s/^TDEF .*$/TDEF   ${OUTPUT_TDEF}  LINEAR  ${OUTPUT_TDEF_START}  ${OUTPUT_TDEF_INCRE_GRADS}/"  \
+	    > ${OUTPUT_CTL}.tmp2
 #        -e "s/^DSET .*$/DSET \^${TEMPLATE}/" \
-    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp2   > ${OUTPUT_CTL}
-    cat ${OUTPUT_CTL}.chsub                >> ${OUTPUT_CTL}
-    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp2 >> ${OUTPUT_CTL}
-    rm ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
+	sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp2   > ${OUTPUT_CTL}
+	cat ${OUTPUT_CTL}.chsub                >> ${OUTPUT_CTL}
+	sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp2 >> ${OUTPUT_CTL}
+	rm ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
+    fi
     #
     #========================================#
     #  date loop (for each file)

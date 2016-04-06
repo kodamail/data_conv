@@ -94,15 +94,17 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    sed ${OUTPUT_CTL}.tmp1 \
-        -e "/^XDEF/,/^YDEF/{" \
-        -e "/^\(XDEF\|YDEF\)/!D" \
-        -e "}" \
-        -e "s/^XDEF.*/XDEF  1  LEVELS  0.0/" \
-        > ${OUTPUT_CTL} || exit 1
-    rm ${OUTPUT_CTL}.tmp1
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+        #
+	sed ${OUTPUT_CTL}.tmp1 \
+            -e "/^XDEF/,/^YDEF/{" \
+            -e "/^\(XDEF\|YDEF\)/!D" \
+            -e "}" \
+            -e "s/^XDEF.*/XDEF  1  LEVELS  0.0/" \
+            > ${OUTPUT_CTL} || exit 1
+	rm ${OUTPUT_CTL}.tmp1
+    fi
     #
     #========================================#
     #  month loop (for each file)

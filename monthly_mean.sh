@@ -102,36 +102,38 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    if [ "${INC_SUBVARS}" = "yes" ] ; then
-	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    else
-	TMP=$( grads_ctl.pl ${INPUT_CTL} VARS | grep ^${VAR} )
-	grads_ctl.pl ${INPUT_CTL} --set "VARS 1" --set "${TMP}" > ${OUTPUT_CTL}.tmp1 || exit 1
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	if [ "${INC_SUBVARS}" = "yes" ] ; then
+	    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+	else
+	    TMP=$( grads_ctl.pl ${INPUT_CTL} VARS | grep ^${VAR} )
+	    grads_ctl.pl ${INPUT_CTL} --set "VARS 1" --set "${TMP}" > ${OUTPUT_CTL}.tmp1 || exit 1
+	fi
+        #
+	STR_ENS=""
+	[ ${EDEF} -gt 1 ] && STR_ENS="_bin%e"
+        #
+	YM=$( date -u --date "${TDEF_START}" +%Y%m ) || exit 1
+	let TDEF_SEC=TDEF_INCRE_SEC*${TDEF}
+	OUTPUT_YM_END=$( date -u --date "${TDEF_START} ${TDEF_SEC} seconds 1 month ago" +%Y%m ) || exit 1
+	OUTPUT_TDEF=0
+	while [ ${YM} -le ${OUTPUT_YM_END} ] ; do
+	    let OUTPUT_TDEF=OUTPUT_TDEF+1
+	    YM=$( date -u --date "${YM}01 1 month" +%Y%m )
+	done
+	OUTPUT_TDEF_START=15$( date -u --date "${TDEF_START}" +%b%Y ) || exit 1
+	sed ${OUTPUT_CTL}.tmp1 \
+            -e "s|^DSET .*$|DSET ^%y4/${VAR}_%y4%m2${STR_ENS}.grd|" \
+	    -e "s/TEMPLATE//ig" \
+            -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
+            -e "s/ yrev//i" \
+	    -e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
+            -e "s/^TDEF .*$/TDEF    ${OUTPUT_TDEF}  LINEAR  ${OUTPUT_TDEF_START}  1mo/" \
+            -e "s/^ -1,40,1 / 99 /" \
+            -e "/^CHSUB .*$/d" \
+	    > ${OUTPUT_CTL} || exit 1
+	rm ${OUTPUT_CTL}.tmp1
     fi
-    #
-    STR_ENS=""
-    [ ${EDEF} -gt 1 ] && STR_ENS="_bin%e"
-    #
-    YM=$( date -u --date "${TDEF_START}" +%Y%m ) || exit 1
-    let TDEF_SEC=TDEF_INCRE_SEC*${TDEF}
-    OUTPUT_YM_END=$( date -u --date "${TDEF_START} ${TDEF_SEC} seconds 1 month ago" +%Y%m ) || exit 1
-    OUTPUT_TDEF=0
-    while [ ${YM} -le ${OUTPUT_YM_END} ] ; do
-	let OUTPUT_TDEF=OUTPUT_TDEF+1
-	YM=$( date -u --date "${YM}01 1 month" +%Y%m )
-    done
-    OUTPUT_TDEF_START=15$( date -u --date "${TDEF_START}" +%b%Y ) || exit 1
-    sed ${OUTPUT_CTL}.tmp1 \
-        -e "s|^DSET .*$|DSET ^%y4/${VAR}_%y4%m2${STR_ENS}.grd|" \
-	-e "s/TEMPLATE//ig" \
-        -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
-        -e "s/ yrev//i" \
-	-e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
-        -e "s/^TDEF .*$/TDEF    ${OUTPUT_TDEF}  LINEAR  ${OUTPUT_TDEF_START}  1mo/" \
-        -e "s/^ -1,40,1 / 99 /" \
-        -e "/^CHSUB .*$/d" \
-	> ${OUTPUT_CTL} || exit 1
-    rm ${OUTPUT_CTL}.tmp1
     #
     #========================================#
     #  month loop (for each file)

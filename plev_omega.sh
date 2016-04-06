@@ -102,35 +102,37 @@ for VAR in m${VAR_W:1:1}_omega ; do
     #----- generate control file (unified)
     #
     mkdir -p ${INOUT_DIR}/${VAR}/log || exit 1
-    grads_ctl.pl ${INPUT_W_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    rm -f ${OUTPUT_CTL}.chsub
-    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
-    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
-        let CHSUB_MAX=d+TDEF_FILE-1
-        DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
-        echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    done
-    sed ${OUTPUT_CTL}.tmp1 \
-        -e "s|^DSET .*$|DSET \^%ch.grd|" \
-	-e "/^CHSUB .*/d"  \
-	-e "s/TEMPLATE//ig" \
-        -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
-	-e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
-	-e "/^ZDEF/,/^TDEF/{" \
-	-e "/^\(ZDEF\|TDEF\)/!D" \
-	-e "}" \
-	-e "s/^ZDEF .*/ZDEF  ${PDEF}  LEVELS  ${PDEF_LIST}/" \
-        -e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
-	-e "s/^${VAR_W} /${VAR} /" \
-	| sed -e "s/m\/s/Pa\/s/" \
-	> ${OUTPUT_CTL}.tmp || exit 1
-    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
-    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
-    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
-    rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp1 ${OUTPUT_CTL}.chsub
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	grads_ctl.pl ${INPUT_W_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+        #
+	rm -f ${OUTPUT_CTL}.chsub
+	DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
+	echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
+            let CHSUB_MAX=d+TDEF_FILE-1
+            DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
+            echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	done
+	sed ${OUTPUT_CTL}.tmp1 \
+            -e "s|^DSET .*$|DSET \^%ch.grd|" \
+	    -e "/^CHSUB .*/d"  \
+	    -e "s/TEMPLATE//ig" \
+            -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
+	    -e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
+	    -e "/^ZDEF/,/^TDEF/{" \
+	    -e "/^\(ZDEF\|TDEF\)/!D" \
+	    -e "}" \
+	    -e "s/^ZDEF .*/ZDEF  ${PDEF}  LEVELS  ${PDEF_LIST}/" \
+            -e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
+	    -e "s/^${VAR_W} /${VAR} /" \
+	    | sed -e "s/m\/s/Pa\/s/" \
+	    > ${OUTPUT_CTL}.tmp || exit 1
+	sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
+	cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
+	sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
+	rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp1 ${OUTPUT_CTL}.chsub
 #    cat ${OUTPUT_CTL}
+    fi
     #
     #========================================#
     #  date loop (for each file)

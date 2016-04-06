@@ -111,48 +111,50 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    sed ${OUTPUT_CTL}.tmp1 \
-	-e "/^CHSUB .*/d"  \
-        -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
-	-e "s/^UNDEF .*$/UNDEF -99.9e+33/" \
-        -e "/^XDEF/,/^YDEF/{" \
-        -e "/^\(XDEF\|YDEF\)/!D" \
-        -e "}" \
-        -e "s/^XDEF.*/XDEF  ${XDEF_OUT}  LINEAR  ${XDEF_OUT_START}  ${XDEF_OUT_INT}/" \
-        -e "/YDEF/,/^ZDEF/{" \
-        -e "/^\(YDEF\|ZDEF\)/!D" \
-        -e "}" \
-        -e "s/^YDEF.*/YDEF  ${YDEF_OUT}  LINEAR  ${YDEF_OUT_START}  ${YDEF_OUT_INT}/" \
-        -e "s/^VARS .*$/VARS  1/" \
-        -e "/^VARS/,/^ENDVARS/{" \
-        -e "/^\(VARS\|ENDVARS\|${VAR}\)/!D" \
-        -e "}" \
-	> ${OUTPUT_CTL}.tmp2 || exit 1
-    if [ "${START_HMS}" != "000000" ] ; then
-	rm -f ${OUTPUT_CTL}.chsub
-	DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
-	echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub    
-	for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
-	    let CHSUB_MAX=d+TDEF_FILE-1
-	    DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
-	    echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-	done
-	sed ${OUTPUT_CTL}.tmp2 \
-            -e "s|^DSET .*$|DSET \^%ch.grd|" \
-            -e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
-	    > ${OUTPUT_CTL}.tmp || exit 1
-	sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
-	cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
-	sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
-	rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
-    else
-	sed ${OUTPUT_CTL}.tmp2 \
-            -e "s|^DSET .*$|DSET \^%y4/${VAR}_%y4%m2%d2.grd|" \
-	    > ${OUTPUT_CTL} || exit 1
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+        #
+	sed ${OUTPUT_CTL}.tmp1 \
+	    -e "/^CHSUB .*/d"  \
+            -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
+	    -e "s/^UNDEF .*$/UNDEF -99.9e+33/" \
+            -e "/^XDEF/,/^YDEF/{" \
+            -e "/^\(XDEF\|YDEF\)/!D" \
+            -e "}" \
+            -e "s/^XDEF.*/XDEF  ${XDEF_OUT}  LINEAR  ${XDEF_OUT_START}  ${XDEF_OUT_INT}/" \
+            -e "/YDEF/,/^ZDEF/{" \
+            -e "/^\(YDEF\|ZDEF\)/!D" \
+            -e "}" \
+            -e "s/^YDEF.*/YDEF  ${YDEF_OUT}  LINEAR  ${YDEF_OUT_START}  ${YDEF_OUT_INT}/" \
+            -e "s/^VARS .*$/VARS  1/" \
+            -e "/^VARS/,/^ENDVARS/{" \
+            -e "/^\(VARS\|ENDVARS\|${VAR}\)/!D" \
+            -e "}" \
+	    > ${OUTPUT_CTL}.tmp2 || exit 1
+	if [ "${START_HMS}" != "000000" ] ; then
+	    rm -f ${OUTPUT_CTL}.chsub
+	    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
+	    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub    
+	    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
+		let CHSUB_MAX=d+TDEF_FILE-1
+		DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
+		echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	    done
+	    sed ${OUTPUT_CTL}.tmp2 \
+		-e "s|^DSET .*$|DSET \^%ch.grd|" \
+		-e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
+		> ${OUTPUT_CTL}.tmp || exit 1
+	    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
+	    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
+	    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
+	    rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
+	else
+	    sed ${OUTPUT_CTL}.tmp2 \
+		-e "s|^DSET .*$|DSET \^%y4/${VAR}_%y4%m2%d2.grd|" \
+		> ${OUTPUT_CTL} || exit 1
+	fi
+	rm -f ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
     fi
-    rm -f ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
     #
     #========================================#
     #  date loop (for each file)
