@@ -73,9 +73,12 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	if [ "${INPUT_TIME}" = "monthly_mean" ] ; then
 	    PERIOD="monthly_mean"
 	else
+	    TDEF_INCRE_MN=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit MN | sed -e "s|MN$||" ) || exit 1
 	    TDEF_INCRE_HR=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit HR | sed -e "s|HR$||" ) || exit 1
 	    TDEF_INCRE_DY=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit DY | sed -e "s|DY$||" ) || exit 1
-	    if [ ${TDEF_INCRE_HR} -lt 24 ] ; then
+	    if [ ${TDEF_INCRE_MN} -lt 60 ] ; then
+		PERIOD="${TDEF_INCRE_MN}mn"
+	    elif [ ${TDEF_INCRE_HR} -lt 24 ] ; then
 		PERIOD="${TDEF_INCRE_HR}hr"
 	    else
 		PERIOD="${TDEF_INCRE_DY}dy"
