@@ -95,7 +95,9 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     YM=$( date -u --date "${TDEF_START}" +%Y%m ) || exit 1
     let TDEF_SEC=TDEF_INCRE_SEC*${TDEF}
-    OUTPUT_YM_END=$( date -u --date "${TDEF_START} ${TDEF_SEC} seconds 1 month ago" +%Y%m ) || exit 1
+#    OUTPUT_YM_END=$( date -u --date "${TDEF_START} ${TDEF_SEC} seconds 1 month ago" +%Y%m ) || exit 1
+    OUTPUT_YM_END=$( date -u --date "${TDEF_START} ${TDEF_SEC} seconds" +%Y%m ) || exit 1
+    OUTPUT_YM_END=$( date -u --date "${OUTPUT_YM_END}01 1 month ago" +%Y%m ) || exit 1
     OUTPUT_TDEF=0
     while [ ${YM} -le ${OUTPUT_YM_END} ] ; do
 	let OUTPUT_TDEF=OUTPUT_TDEF+1
