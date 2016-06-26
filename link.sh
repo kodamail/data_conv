@@ -14,6 +14,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
     INPUT_ML=${INPUT_ML_LIST[$i]}
     INPUT_TIME=${INPUT_TIME_LIST[$i]}
     EXT=${EXT_LIST[$i]}
+    VAR_LIST=()
     echo ${INPUT_DIR_CTL}
 
     if [ "${SEP_DIR_LIST[$i]}" = "1"  ] ; then
