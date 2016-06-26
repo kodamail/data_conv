@@ -17,6 +17,7 @@ for(( i=0; $i<${#INPUT_DIR_CTL_LIST[@]}; i=$i+1 )) ; do
     INPUT_CTL_LIST=()
     VAR_LIST=()
     echo ${INPUT_DIR_CTL}
+    [ ! -d ${INPUT_DIR_CTL} ] && { echo "  -> skip!" ; continue ; }
 
     if [ "${SEP_DIR_LIST[$i]}" = "1"  ] ; then
 	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl ) ) || exit 1
