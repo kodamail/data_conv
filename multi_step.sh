@@ -114,7 +114,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	continue
     fi
     #                                                                                                 
-    START_HMS=$( date -u --date "${TDEF_START}" +%H%M%S )
+    START_HMS=$( date -u --date "${INPUT_TDEF_START}" +%H%M%S )
     TMP_H=${START_HMS:0:2}
     TMP_M=${START_HMS:2:2}
     let TMP_MN=TMP_H*60+TMP_M
