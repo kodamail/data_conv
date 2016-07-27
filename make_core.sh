@@ -491,7 +491,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 #		exit 1
 		./multi_step.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${PERIOD} ${OVERWRITE} ${VAR} ${SA} || exit 1
+		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
 	    fi
 	done
     done
