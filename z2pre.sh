@@ -52,7 +52,8 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of output data
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    if [ -f "${OUTPUT_CTL}" ] ; then
+#    if [ -f "${OUTPUT_CTL}" ] ; then
+    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
         FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
             echo "info: Output data already exist."
@@ -60,7 +61,7 @@ for VAR in ${VAR_LIST[@]} ; do
         fi
     fi
     #
-    #----- check existence of input data
+    #----- get number of grids for input/output
     #
     INPUT_CTL=${INPUT_DIR}/${VAR}/${VAR}.ctl
     INPUT_PRES_CTL=${INPUT_DIR}/${VAR_PRES}/${VAR_PRES}.ctl
@@ -69,15 +70,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	    echo "warning: ${CTL} does not exist."
 	    continue 2
 	fi
-	FLAG=( $( grads_exist_data.sh ${CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-	if [ "${FLAG[0]}" != "ok" ] ; then
-	    echo "warning: All or part of data does not exist (CTL=${CTL})."
-	    continue 2
-	fi
     done
-    #
-    #----- get number of grids for input/output
-    #
     DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
     XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]}
     TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
@@ -88,38 +81,67 @@ for VAR in ${VAR_LIST[@]} ; do
     PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
     let TDEF_FILE=60*60*24/TDEF_INCRE_SEC       # number of time step per file
     let TDEF_SEC_FILE=TDEF_INCRE_SEC*TDEF_FILE  # time in second per file
+    #                                                                                                 
+    START_HMS=$( date -u --date "${TDEF_START}" +%H%M%S )
+    TMP_H=${START_HMS:0:2}
+    TMP_M=${START_HMS:2:2}
+    let TMP_MN=TMP_H*60+TMP_M
+    #
+    #----- check existence of input data
+    #
+    for CTL in ${INPUT_PRES_CTL} ${INPUT_CTL} ; do
+	if [ "${START_HMS}" != "000000" ] ; then
+	    FLAG=( $( grads_exist_data.sh ${CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+	else
+	    FLAG=( $( grads_exist_data.sh ${CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
+	fi
+	if [ "${FLAG[0]}" != "ok" ] ; then
+	    echo "warning: All or part of data does not exist (CTL=${CTL})."
+	    continue 2
+	fi
+    done
     #
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    rm -f ${OUTPUT_CTL}.chsub
-    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
-    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
-        let CHSUB_MAX=d+TDEF_FILE-1
-        DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
-        echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    done
-    PDEF_LIST=$( echo ${PDEF_LEVELS} | sed -e "s/,/ /"g ) || exit 1
-    sed ${OUTPUT_CTL}.tmp1 \
-        -e "s|^DSET .*$|DSET \^%ch.grd|" \
-	-e "/^CHSUB .*/d"  \
-	-e "s/TEMPLATE//ig" \
-        -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
-	-e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
-	-e "/^ZDEF/,/^TDEF/{" \
-	-e "/^\(ZDEF\|TDEF\)/!D" \
-	-e "}" \
-	-e "s/^ZDEF .*/ZDEF  ${PDEF}  LEVELS  ${PDEF_LIST}/" \
-        -e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
-	-e "s/^\(${VAR} *\)${ZDEF}/\1${PDEF}/" \
-	> ${OUTPUT_CTL}.tmp || exit 1
-    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL}  || exit 1
-    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
-    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
-    rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp1 ${OUTPUT_CTL}.chsub
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+        #
+	PDEF_LIST=$( echo ${PDEF_LEVELS} | sed -e "s/,/ /"g ) || exit 1
+	sed ${OUTPUT_CTL}.tmp1 \
+	    -e "/^CHSUB .*/d"  \
+	    -e "s/TEMPLATE//ig" \
+            -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
+	    -e "s/^UNDEF .*$/UNDEF -0.99900E+35/i"  \
+	    -e "/^ZDEF/,/^TDEF/{" \
+	    -e "/^\(ZDEF\|TDEF\)/!D" \
+	    -e "}" \
+	    -e "s/^ZDEF .*/ZDEF  ${PDEF}  LEVELS  ${PDEF_LIST}/" \
+	    -e "s/^\(${VAR} *\)${ZDEF}/\1${PDEF}/" \
+	    > ${OUTPUT_CTL}.tmp2 || exit 1
+	if [ "${START_HMS}" != "000000" ] ; then
+	    rm -f ${OUTPUT_CTL}.chsub
+	    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
+	    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
+		let CHSUB_MAX=d+TDEF_FILE-1
+		DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
+		echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	    done
+	    sed ${OUTPUT_CTL}.tmp2 \
+		-e "s|^DSET .*$|DSET \^%ch.grd|" \
+		-e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
+	    > ${OUTPUT_CTL}.tmp || exit 1
+	    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL}  || exit 1
+	    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
+	    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
+	else
+            sed ${OUTPUT_CTL}.tmp2 \
+		-e "s|^DSET .*$|DSET \^%y4/${VAR}_%y4%m2%d2.grd|" \
+		> ${OUTPUT_CTL} || exit 1
+	fi
+	rm -f ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
+    fi
     #
     #========================================#
     #  date loop (for each file)
@@ -168,10 +190,16 @@ for VAR in ${VAR_LIST[@]} ; do
         #----- combine necessary input file
         #
         echo "YMD=${YMD}"
+	YMD_TMP="(${YMD}:${YMDPP}]" # one day = [00:01 - 24:00]
+	if [ "${START_HMS}" = "000000" ] ; then
+	    YMD_TMP="[${YMD}:${YMDPP})" # one day = [00:00 - 23:59]
+	    echo "It is not fully checked. Please check!"
+	    exit 1
+	fi
         grads_get_data.sh ${VERBOSE_OPT} ${INPUT_CTL}      ${VAR}      ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
-            -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
+            -ymd "${YMD_TMP}" || exit 1   
         grads_get_data.sh ${VERBOSE_OPT} ${INPUT_PRES_CTL} ${VAR_PRES} ${TEMP_DIR}/${VAR_PRES}_${YMD}.grd.in \
-            -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
+            -ymd "${YMD_TMP}" || exit 1
 	#
 	#----- z2pre
 	#

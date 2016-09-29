@@ -8,7 +8,8 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 [ -f "${DIR_SCRIPT}/common.sh" ] && . ${DIR_SCRIPT}/common.sh
 
 #----- XDEF/YDEF
-HGRID_LIST=( 360x181 zmean_181 )
+#HGRID_LIST=( 360x181 zmean_181 )
+HGRID_LIST=( 360x181 )
 
 #----- TDEF
 TGRID_LIST=( tstep monthly_mean )
@@ -29,4 +30,6 @@ VARS=( \
 
 #----- Analysis flag
 FLAG_TSTEP_REDUCE=1
-FLAG_TSTEP_ZM=1
+#FLAG_TSTEP_ZM=1
+
+FLAG_MM_ZM=1

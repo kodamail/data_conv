@@ -9,7 +9,7 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 HGRID_LIST=( 288x145 )
 
 #----- TDEF
-TGRID_LIST=( tstep monthly_mean )
+TGRID_LIST=( tstep 1dy_mean monthly_mean )
 
 #----- VAR
 VARS=( \

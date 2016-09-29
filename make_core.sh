@@ -18,6 +18,16 @@ date
 
 #############################################################
 #
+# Overwrite variable in the job
+#
+#############################################################
+while [ -n "$2" ] ; do
+    eval $2
+    shift
+done
+
+#############################################################
+#
 # Expand VARS
 #
 #############################################################
@@ -58,7 +68,8 @@ DIR_IN_LIST=()
 for DIR_IN in \
     ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep \
     ../../{ll,ol,sl}/${XDEF_NAT}x${YDEF_NAT}/tstep          \
-    ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep ; do
+    ../../${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x${ZDEF}/tstep ; do
+#    ../../${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep ; do
     [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
@@ -99,7 +110,8 @@ fi
 DIR_IN_LIST=( )
 for HGRID in ${HGRID_LIST[@]} ; do
     [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
-    DIR_IN=../../ml_zlev/${HGRID}x${ZDEF_NAT}/tstep
+#    DIR_IN=../../ml_zlev/${HGRID}x${ZDEF_NAT}/tstep
+    DIR_IN=../../ml_zlev/${HGRID}x${ZDEF}/tstep
     [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
@@ -342,7 +354,7 @@ for HGRID in ${HGRID_LIST[@]} ; do
     [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
     for DIR_IN in \
 	../../{ll,ol,sl}/${HGRID}/tstep      \
-	../../ml_zlev/${HGRID}x${ZDEF}/tstep \
+	../../${ZDEF_TYPE}/${HGRID}x${ZDEF}/tstep \
 	../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ; do
 	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
     done
@@ -452,7 +464,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     for HGRID in ${HGRID_LIST[@]} ; do
 	for DIR_IN in \
 	    ../../{ll,ol,sl}/${HGRID}/tstep          \
-	    ../../ml_zlev/${HGRID}x${ZDEF}/tstep \
+	    ../../${ZDEF_TYPE}/${HGRID}x${ZDEF}/tstep \
 	    ../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	done
@@ -471,7 +483,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    if [ "${PERIOD}" = "monthly_mean" ] ; then
 		./monthly_mean.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${OVERWRITE} ${VAR} || exit 1
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
 	    else
 		SA=
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
@@ -479,7 +491,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 #		exit 1
 		./multi_step.sh ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${PERIOD} ${OVERWRITE} ${VAR} ${SA} || exit 1
+		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
 	    fi
 	done
     done
@@ -523,7 +535,7 @@ for HGRID in ${HGRID_LIST[@]} ; do
     [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
     for DIR_IN in \
 	../../{ll,ol,sl}/${HGRID}/monthly_mean      \
-	../../ml_zlev/${HGRID}x${ZDEF}/monthly_mean \
+	../../${ZDEF_TYPE}/${HGRID}x${ZDEF}/monthly_mean \
 	../../isccp/${HGRID}x{${ZDEF_ISCCP},3}/monthly_mean ; do
 	[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
     done

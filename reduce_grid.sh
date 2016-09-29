@@ -51,7 +51,8 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of output data
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    if [ -f "${OUTPUT_CTL}" ] ; then
+#    if [ -f "${OUTPUT_CTL}" ] ; then
+    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
         FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
         if [ "${FLAG[0]}" = "ok" ] ; then
             echo "info: Output data already exist."
@@ -59,27 +60,36 @@ for VAR in ${VAR_LIST[@]} ; do
         fi
     fi
     #
-    #----- check existence of input data
+    #----- get number of grids for input/output
     #
     INPUT_CTL=${INPUT_DIR}/${VAR}/${VAR}.ctl
     if [ ! -f "${INPUT_CTL}" ] ; then
 	echo "warning: ${INPUT_CTL} does not exist."
 	continue
     fi
-    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-    if [ "${FLAG[0]}" != "ok" ] ; then
-	echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
-	continue
-    fi
-    #
-    #----- get number of grids for input/output
-    #
     DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
     XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]}
     TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
     TDEF_START=$(     grads_ctl.pl ${INPUT_CTL} TDEF 1 ) || exit 1
     TDEF_INCRE_SEC=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit SEC | sed -e "s/SEC//" ) || exit 1
     TDEF_INCRE_MN=$(  grads_ctl.pl ${INPUT_CTL} TDEF INC --unit MN  | sed -e "s/MN//"  ) || exit 1
+    #
+    START_HMS=$( date -u --date "${TDEF_START}" +%H%M%S )
+    TMP_H=${START_HMS:0:2}
+    TMP_M=${START_HMS:2:2}
+    let TMP_MN=TMP_H*60+TMP_M
+    #
+    #----- check existence of input data
+    #
+    if [ "${START_HMS}" != "000000" ] ; then
+	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+    else
+	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
+    fi
+    if [ "${FLAG[0]}" != "ok" ] ; then
+	echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
+	continue
+    fi
     #
     XDEF_OUT=$( echo ${XYDEF} | cut -d x -f 1 )
     YDEF_OUT=$( echo ${XYDEF} | cut -d x -f 2 )
@@ -101,36 +111,50 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
-    #
-    rm -f ${OUTPUT_CTL}.chsub
-    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
-    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub    
-    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
-	let CHSUB_MAX=d+TDEF_FILE-1
-	DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
-	echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
-    done
-    sed ${OUTPUT_CTL}.tmp1 \
-        -e "s|^DSET .*$|DSET \^%ch.grd|" \
-	-e "/^CHSUB .*/d"  \
-        -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
-	-e "s/^UNDEF .*$/UNDEF -99.9e+33/" \
-        -e "/^XDEF/,/^YDEF/{" \
-        -e "/^\(XDEF\|YDEF\)/!D" \
-        -e "}" \
-        -e "s/^XDEF.*/XDEF  ${XDEF_OUT}  LINEAR  ${XDEF_OUT_START}  ${XDEF_OUT_INT}/" \
-        -e "/YDEF/,/^ZDEF/{" \
-        -e "/^\(YDEF\|ZDEF\)/!D" \
-        -e "}" \
-        -e "s/^YDEF.*/YDEF  ${YDEF_OUT}  LINEAR  ${YDEF_OUT_START}  ${YDEF_OUT_INT}/" \
-        -e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
-	> ${OUTPUT_CTL}.tmp || exit 1
-    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
-    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
-    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
-    rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp1 ${OUTPUT_CTL}.chsub
-#    cat ${OUTPUT_CTL}
+    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+	grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || exit 1
+        #
+	sed ${OUTPUT_CTL}.tmp1 \
+	    -e "/^CHSUB .*/d"  \
+            -e "s/^OPTIONS .*$/OPTIONS TEMPLATE BIG_ENDIAN/i" \
+	    -e "s/^UNDEF .*$/UNDEF -99.9e+33/" \
+            -e "/^XDEF/,/^YDEF/{" \
+            -e "/^\(XDEF\|YDEF\)/!D" \
+            -e "}" \
+            -e "s/^XDEF.*/XDEF  ${XDEF_OUT}  LINEAR  ${XDEF_OUT_START}  ${XDEF_OUT_INT}/" \
+            -e "/YDEF/,/^ZDEF/{" \
+            -e "/^\(YDEF\|ZDEF\)/!D" \
+            -e "}" \
+            -e "s/^YDEF.*/YDEF  ${YDEF_OUT}  LINEAR  ${YDEF_OUT_START}  ${YDEF_OUT_INT}/" \
+            -e "s/^VARS .*$/VARS  1/" \
+            -e "/^VARS/,/^ENDVARS/{" \
+            -e "/^\(VARS\|ENDVARS\|${VAR}\)/!D" \
+            -e "}" \
+	    > ${OUTPUT_CTL}.tmp2 || exit 1
+	if [ "${START_HMS}" != "000000" ] ; then
+	    rm -f ${OUTPUT_CTL}.chsub
+	    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1  # YYYYMMDD HH:MM:SS
+	    echo "CHSUB  1  ${TDEF_FILE}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub    
+	    for(( d=1+${TDEF_FILE}; ${d}<=${TDEF}; d=${d}+${TDEF_FILE} )) ; do
+		let CHSUB_MAX=d+TDEF_FILE-1
+		DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
+		echo "CHSUB  ${d}  ${CHSUB_MAX}  ${DATE:0:4}/${VAR}_${DATE:0:8}" >> ${OUTPUT_CTL}.chsub
+	    done
+	    sed ${OUTPUT_CTL}.tmp2 \
+		-e "s|^DSET .*$|DSET \^%ch.grd|" \
+		-e "s/^TDEF .*$/TDEF    ${TDEF}  LINEAR  ${TDEF_START}  ${TDEF_INCRE_MN}mn/" \
+		> ${OUTPUT_CTL}.tmp || exit 1
+	    sed -e "/^DSET/q" ${OUTPUT_CTL}.tmp    > ${OUTPUT_CTL} || exit 1
+	    cat ${OUTPUT_CTL}.chsub               >> ${OUTPUT_CTL} || exit 1
+	    sed -e "0,/^DSET/d" ${OUTPUT_CTL}.tmp >> ${OUTPUT_CTL} || exit 1
+	    rm ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
+	else
+	    sed ${OUTPUT_CTL}.tmp2 \
+		-e "s|^DSET .*$|DSET \^%y4/${VAR}_%y4%m2%d2.grd|" \
+		> ${OUTPUT_CTL} || exit 1
+	fi
+	rm -f ${OUTPUT_CTL}.tmp ${OUTPUT_CTL}.tmp[12] ${OUTPUT_CTL}.chsub
+    fi
     #
     #========================================#
     #  date loop (for each file)
@@ -179,8 +203,13 @@ for VAR in ${VAR_LIST[@]} ; do
 	#----- combine necessary input file
 	#
 	echo "YMD=${YMD}"
-	grads_get_data.sh ${VERBOSE_OPT} ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
-	    -ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
+	if [ "${START_HMS}" != "000000" ] ; then
+	    grads_get_data.sh ${VERBOSE_OPT} ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
+		-ymd "(${YMD}:${YMDPP}]" || exit 1   # one day = [00:01 - 24:00]
+	else
+	    grads_get_data.sh ${VERBOSE_OPT} ${INPUT_CTL} ${VAR} ${TEMP_DIR}/${VAR}_${YMD}.grd.in \
+		-ymd "[${YMD}:${YMDPP})" || exit 1   # one day = [00:00 - 23:59]
+	fi
 	#
 	#----- roughen
 	#
