@@ -20,14 +20,13 @@ PDEF_LEVELS_LIST[0]="1000,975,950,925,900,875,850,825,800,775,750,700,650,600,55
 TGRID_LIST=( monthly_mean )
 
 #----- VAR
-VARS=( \
-#    ms_pres \
-    ms_tem  \
-    ms_u    \
-    ms_v    \
-    ms_w    \
-    ms_rh   \
-    ms_qv   \
+VARS=(
+    ms_tem
+    ms_u
+    ms_v
+    ms_w
+    ms_rh
+    ms_qv
     )
 
 #----- Analysis flag

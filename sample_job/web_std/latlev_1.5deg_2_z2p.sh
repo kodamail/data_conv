@@ -26,14 +26,13 @@ TGRID_LIST=( tstep )
 #START_YMD=20040601 ; ENDPP_YMD=20040701  # normally given by common.sh
 
 #----- VAR
-VARS=( \
-#    ms_pres \
-    ms_tem  \
-    ms_u    \
-    ms_v    \
-    ms_w    \
-    ms_rh   \
-    ms_qv   \
+VARS=(
+    ms_tem
+    ms_u
+    ms_v
+#    ms_w
+    ms_rh
+#    ms_qv
     )
 
 #----- Analysis flag

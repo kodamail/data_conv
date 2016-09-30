@@ -15,21 +15,21 @@ ZDEF=38
 TGRID_LIST=( tstep )
 
 #----- VAR
-VARS=( \
-    ms_pres \
-    ms_tem  \
-    ms_u    \
-    ms_v    \
-    ms_w    \
-    ms_rh   \
-    ms_qv   \
-    ms_qc   \
-    ms_qi   \
-    ms_qr   \
-    ms_qs   \
-    ms_qg   \
-    ms_lwhr \
-    ms_swhr \
+VARS=(
+    ms_pres
+    ms_tem
+    ms_u
+    ms_v
+    ms_w
+    ms_rh
+    ms_qv
+    ms_qc
+    ms_qi
+    ms_qr
+    ms_qs
+    ms_qg
+    ms_lwhr
+    ms_swhr
     )
 
 #----- Analysis flag
