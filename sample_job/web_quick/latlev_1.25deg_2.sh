@@ -7,7 +7,7 @@ DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.s
 
 #----- XDEF/YDEF
 #HGRID_LIST=( 144x72 zmean_72 )
-HGRID_LIST=( 144x72 )
+HGRID_LIST=( 288x145 )
 
 #----- ZDEF(pressure)
 # for comparison with ERA-Interim
