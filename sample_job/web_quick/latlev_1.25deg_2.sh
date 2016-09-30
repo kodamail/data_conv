@@ -18,10 +18,9 @@ TGRID_LIST=( tstep monthly_mean )
 #START_YMD=20040601 ; ENDPP_YMD=20040701  # normally given by common.sh
 
 #----- VAR
-VARS=( \
-#    ms_pres \
-    ms_tem  \
-    ms_u    \
+VARS=(
+    ms_tem
+    ms_u
     )
 
 #----- Analysis flag

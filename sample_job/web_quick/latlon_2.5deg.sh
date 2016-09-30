@@ -12,9 +12,9 @@ HGRID_LIST=( 144x72 )
 TGRID_LIST=( tstep monthly_mean )
 
 #----- VAR
-VARS=( \
-    sa_tppn      \
-    dfq_isccp2   \
+VARS=(
+    sa_tppn
+    dfq_isccp2
     )
 
 #----- Analysis flag

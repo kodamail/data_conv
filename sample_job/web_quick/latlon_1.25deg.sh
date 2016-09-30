@@ -12,8 +12,8 @@ HGRID_LIST=( 288x145 )
 TGRID_LIST=( tstep 1dy_mean monthly_mean )
 
 #----- VAR
-VARS=( \
-    sa_t2m       \
+VARS=(
+    sa_t2m
     )
 
 #----- Analysis flag
