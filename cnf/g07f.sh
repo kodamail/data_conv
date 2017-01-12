@@ -3,10 +3,11 @@
 #   (RUNID=def: default)
 #
 
-INPUT_TOP_RDIR=../../../data_1st
+#INPUT_TOP_RDIR=../../../data_1st
+INPUT_TOP_RDIR=../../g07f/data_1st
 
-DCONV_TOP_RDIR=../../../data_conv
-#DCONV_TOP_RDIR=test
+#DCONV_TOP_RDIR=../../../data_conv
+DCONV_TOP_RDIR=../../g07f/data_conv
 
 #
 # Native (i.e. finest mesh) grid data information
@@ -23,6 +24,8 @@ ZDEF_TYPE=ml_zlev
 VERBOSE=0
 #VERBOSE=1
 
+START_YMD=20040601 ; ENDPP_YMD=20040901
+START_YMD=20040601 ; ENDPP_YMD=20040701
 
 
 #----------------------------------------#
