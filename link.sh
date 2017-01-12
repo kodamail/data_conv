@@ -5,7 +5,7 @@
 # -VAR="?l_*" and "dfq_isccp2" is snapshot or mean
 #
 . ./common.sh
-. ./usr/cnf_link.sh
+. ./usr/cnf_def.sh
 
 #----------------------------------------#
 CHSUB_BREAK_LIST=()

@@ -1,21 +1,20 @@
 #
+# configurations specific for RUNID
+#   (RUNID=def: default)
+#
 
+
+
+#----------------------------------------#
+#
+# for link.sh
+#
 
 # do not delete existing symbolic links
 USE_OLD=1
 
-#
-# directry of control files
-#
-#EXT=grd
-#EXT=nc
-
-#INPUT_DIR_CTL=../../data_1st/ctl_nc
-
 i=0
 INPUT_DIR_CTL_LIST=() ; INPUT_ML_LIST=()
-
-#----------------------------------------#
 
 INPUT_DIR_CTL_LIST[$i]=../../../data_1st/output/ctl_nc/02560x01280.zorg.torg
 INPUT_ML_LIST[$i]=ml_zlev
