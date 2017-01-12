@@ -11,8 +11,8 @@ DCONV_TOP_RDIR=../../../data_conv
 #
 # Native (i.e. finest mesh) grid data information
 #
-XDEF_NAT=640
-YDEF_NAT=320
+XDEF_NAT=2560
+YDEF_NAT=1280
 #ZDEF_NAT=38
 ZDEF_ISCCP=49
 ZDEF_TYPE=ml_zlev
