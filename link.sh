@@ -4,8 +4,12 @@
 # Before execution, check
 # -VAR="?l_*" and "dfq_isccp2" is snapshot or mean
 #
-. ./common.sh
-. ./usr/cnf_def.sh
+#. ./common.sh
+#. ./usr/cnf_def.sh
+
+CNFID=${1:-def}   # CNFID if any ("def" by default)
+
+. ./common.sh ${CNFID} || exit 1
 
 #----------------------------------------#
 CHSUB_BREAK_LIST=()
@@ -98,9 +102,9 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	fi
 
 	if [ "${ZDEF}" = "1" -o "${TAG}" = "ll" ] ; then
-	    OUTPUT_DIR=${OUTPUT_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
+	    OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
 	else
-	    OUTPUT_DIR=${OUTPUT_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}x${ZDEF}/${PERIOD}/${VAR}
+	    OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}x${ZDEF}/${PERIOD}/${VAR}
 	fi 
 	mkdir -p ${OUTPUT_DIR}
 	touch ${OUTPUT_DIR}/_locked    # raw data flag

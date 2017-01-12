@@ -2,18 +2,18 @@
 #
 # 7x7 -> high/middle/low
 #
-. ./common.sh || exit 1
-
 echo "########## $0 start ##########"
 set -x
-#DAYS=$1
-START_YMD=$1   # YYYYMMDD (start day of analysis period)
-ENDPP_YMD=$2   # YYYYMMDD (end+1 day of analysis period)
-INPUT_DIR=$3   # input dir
-OUTPUT_DIR=$4  # output dir
-OVERWRITE=$5   # overwrite option (optional)
+CNFID=$1       # CNFID (e.g. "def")
+START_YMD=$2   # YYYYMMDD (start day of analysis period)
+ENDPP_YMD=$3   # YYYYMMDD (end+1 day of analysis period)
+INPUT_DIR=$4   # input dir
+OUTPUT_DIR=$5  # output dir
+OVERWRITE=$6   # overwrite option (optional)
 set +x
 echo "##########"
+
+. ./common.sh ${CNFID} || exit 1
 
 create_temp || exit 1
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}

@@ -1,20 +1,21 @@
 #!/bin/sh
 # w, rho (or T) -> omega [Pa/s]
 #
-. ./common.sh || exit 1
-
 echo "########## $0 start ##########"
 set -x
-START_YMD=$1   # YYYYMMDD (start day of analysis period)
-ENDPP_YMD=$2   # YYYYMMDD (end+1 day of analysis period)
-INOUT_DIR=$3   # input/output directory
-PDEF_LEVELS=$4 # pressure levels separated by comma
-VAR_W=$5       # variable name of w
-VAR_RHO=$6     # variable name of rho or "none"
-VAR_TEM=$7     # variable name of tem or "none"(optional)
-OVERWRITE=$8   # overwrite option (optional)
+CNFID=$1       # CNFID (e.g. "def")
+START_YMD=$2   # YYYYMMDD (start day of analysis period)
+ENDPP_YMD=$3   # YYYYMMDD (end+1 day of analysis period)
+INOUT_DIR=$4   # input/output directory
+PDEF_LEVELS=$5 # pressure levels separated by comma
+VAR_W=$6       # variable name of w
+VAR_RHO=$7     # variable name of rho or "none"
+VAR_TEM=$8     # variable name of tem or "none"(optional)
+OVERWRITE=$9   # overwrite option (optional)
 set +x
 echo "##########"
+
+. ./common.sh ${CNFID} || exit 1
 
 create_temp || exit 1
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}

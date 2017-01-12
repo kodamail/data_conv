@@ -5,9 +5,8 @@
 
 INPUT_TOP_RDIR=../../../data_1st
 
-OUTPUT_TOP_RDIR=../../../data_conv
-#OUTPUT_TOP_RDIR=../..
-#OUTPUT_TOP_RDIR=test
+DCONV_TOP_RDIR=../../../data_conv
+#DCONV_TOP_RDIR=test
 
 
 #----------------------------------------#

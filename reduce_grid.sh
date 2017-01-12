@@ -2,19 +2,20 @@
 #
 # reduce horizontal grid
 #
-. ./common.sh || exit 1
-
 echo "########## $0 start ##########"
 set -x
-START_YMD=$1   # YYYYMMDD (start day of analysis period)
-ENDPP_YMD=$2   # YYYYMMDD (end+1 day of analysis period)
-INPUT_DIR=$3   # input dir
-OUTPUT_DIR=$4  # output dir
-XYDEF=$5       # output x/y grid in XXXxYYY (e.g. 144x72)
-OVERWRITE=$6   # overwrite option (optional)
-TARGET_VAR=$7  # variable name (optional)
+CNFID=$1       # CNFID (e.g. "def")
+START_YMD=$2   # YYYYMMDD (start day of analysis period)
+ENDPP_YMD=$3   # YYYYMMDD (end+1 day of analysis period)
+INPUT_DIR=$4   # input dir
+OUTPUT_DIR=$5  # output dir
+XYDEF=$6       # output x/y grid in XXXxYYY (e.g. 144x72)
+OVERWRITE=$7   # overwrite option (optional)
+TARGET_VAR=$8  # variable name (optional)
 set +x
 echo "##########"
+
+. ./common.sh ${CNFID} || exit 1
 
 create_temp || exit 1
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}
