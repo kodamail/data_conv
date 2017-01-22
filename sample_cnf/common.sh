@@ -10,7 +10,8 @@ export PATH=/home/hoge/grads_ctl/release-20150818:${PATH}
 
 . bash_common.sh
 
-DIR_NICAM=/home/hoge/NICAM_20150109/NICAM/bin
+#DIR_NICAM=/home/hoge/NICAM_20150109/NICAM/bin
+DIR_NICAM=/home/hoge/NICAM_20170120/NICAM/bin
 BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre

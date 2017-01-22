@@ -240,6 +240,8 @@ for VAR in ${VAR_LIST[@]} ; do
     undef         = -99.9e+33,
     latmin_out    = ${YDEF_OUT_START},
     latmax_out    = ${YDEF_OUT_END},
+
+    opt_areaweight = .true.,
 /
 EOF
         ${BIN_ROUGHEN} || exit 1
