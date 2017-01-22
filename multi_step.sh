@@ -8,15 +8,16 @@
 
 echo "########## $0 start ##########"
 set -x
-START_YMD=$1      # YYYYMMDD (start day of analysis period)
-ENDPP_YMD=$2      # YYYYMMDD (end+1 day of analysis period)
-INPUT_DIR=$3      # input dir
-OUTPUT_DIR_TMP=$4 # output dir
-OUTPUT_PERIOD=$5  # e.g. 1dy_mean, 6hr_tstep
-OVERWRITE=$6      # overwrite option (optional)
-INC_SUBVARS=$7    # SUBVARS option (optional)
-TARGET_VAR=$8     # variable name (optional)
-SA=$9             # optional, s:snapshot a:average
+CNFID=$1       # CNFID (e.g. "def")
+START_YMD=$2      # YYYYMMDD (start day of analysis period)
+ENDPP_YMD=$3      # YYYYMMDD (end+1 day of analysis period)
+INPUT_DIR=$4      # input dir
+OUTPUT_DIR_TMP=$5 # output dir
+OUTPUT_PERIOD=$6  # e.g. 1dy_mean, 6hr_tstep
+OVERWRITE=$7      # overwrite option (optional)
+INC_SUBVARS=$8    # SUBVARS option (optional)
+TARGET_VAR=$9     # variable name (optional)
+SA=${10}          # optional, s:snapshot a:average
 set +x
 echo "##########"
 

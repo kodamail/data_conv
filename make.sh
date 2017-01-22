@@ -1,12 +1,14 @@
 #!/bin/sh
-
-# usage: ./make.sh [ job-1 job-2 ... ]
-# usage: ./make.sh OVERWRITE=rm [ job-1 job-2 ... ]
-
+#
+# usage: ./make.sh [ OVERWRITE=rm ] [CNFID] job-1 [ job-2 [ job-3 ... ] ]
+#
 JOB_LIST=( )
 OPT=""
+CNFID=def
 while [ -n "$1" ] ; do
-    if [ -f $1 ] ; then
+    if [ -f cnf/$1.sh ] ; then
+	CNFID=$1
+    elif [ -f $1 ] ; then
 	JOB_LIST=( ${JOB_LIST[@]} $1 )
     else
 	OPT="${OPT} $1"
@@ -16,8 +18,7 @@ done
 
 if [ ${#JOB_LIST[@]} -eq 0 ] ; then
     echo "usage:"
-    echo "$0 job-1 job-2 ..."
-    echo "$0 OVERWRITE=rm job-1 job-2 ..."
+    echo "$0 [ OVERWRITE=rm ] [CNFID] job-1 [ job-2 [ job-3 ... ] ]"
     exit
 fi
 
@@ -31,7 +32,7 @@ for JOB in ${JOB_LIST[@]} ; do
     echo "#======================================#"
     echo ""
 
-    ./make_core.sh ${JOB} ${OPT}|| exit 1
+    ./make_core.sh ${CNFID} ${JOB} ${OPT}|| exit 1
     
     echo ""
     echo "#======================================#"

@@ -12,12 +12,12 @@ HGRID_LIST=( 360x181 )
 TGRID_LIST=( tstep monthly_mean )
 
 #----- VAR
-VARS=( \
-    sa_lwu_toa   \
-    sa_lwu_toa_c \
-    sa_swd_toa   \
-    sa_swu_toa   \
-    sa_swu_toa_c \
+VARS=(
+    sa_lwu_toa
+    sa_lwu_toa_c
+    sa_swd_toa
+    sa_swu_toa
+    sa_swu_toa_c
     )
 
 #----- Analysis flag

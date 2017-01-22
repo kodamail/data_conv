@@ -4,8 +4,9 @@
 #
 # Note: Do not edit common.sh. The variables can be overwritten by usr/*.sh
 #
-export LANG=en
+export LANG=C
 export F_UFMTENDIAN="big"
+CNFID=${1:-def}   # CNFID ("def" by default)
 
 #############################################################
 
@@ -14,12 +15,15 @@ BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 
+INPUT_TOP_RDIR=NOT_SPECIFIED
+DCONV_TOP_RDIR=NOT_SPECIFIED
+
 #
 # Native (i.e. finest mesh) grid data information
 #
 XDEF_NAT=-1
 YDEF_NAT=-1
-ZDEF_NAT=-1
+#ZDEF_NAT=-1
 ZDEF_ISCCP=-1
 ZDEF_TYPE=ml_zlev
 
@@ -37,7 +41,14 @@ VERBOSE=0
 INC_SUBVARS="yes"
 #############################################################
 
-. usr/common.sh
+. cnf/common.sh
+if [ -f ./cnf/${CNFID}.sh ] ; then
+    . ./cnf/${CNFID}.sh
+else
+    echo "error in common.sh: ./cnf/${CNFID}.sh does not exist."
+    exit 1
+fi
+
 
 VERBOSE_OPT=""
 [ ${VERBOSE} -ge 1 ] && VERBOSE_OPT="-v"
@@ -156,14 +167,20 @@ function expand_vars()
         shift
     done
 
-    VARS_ISCCP=( $( ls ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
-    VARS_LL=(    $( ls ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-#    VARS_ML=(    $( ls ../../ml_zlev/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_NAT}/tstep 2>/dev/null ) \
+    
+
+#    VARS_ISCCP=( $( ls ../../isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
+#    VARS_LL=(    $( ls ../../ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+#    VARS_ML=(    $( ls ../../${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x*/tstep 2>/dev/null ) \
 #	ms_omega ms_z )
-    VARS_ML=(    $( ls ../../${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x*/tstep 2>/dev/null ) \
+#    VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+#    VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_ISCCP=( $( ls ${DCONV_TOP_RDIR}/isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
+    VARS_LL=(    $( ls ${DCONV_TOP_RDIR}/ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_ML=(    $( ls ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x*/tstep 2>/dev/null ) \
 	ms_omega ms_z )
-    VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_OL=(    $( ls ${DCONV_TOP_RDIR}/ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
+    VARS_SL=(    $( ls ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
 #    VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
     VARS_ALL=(   ${VARS_ISCCP[@]} ${VARS_LL[@]} ${VARS_ML[@]} ${VARS_OL[@]} ${VARS_SL[@]} \
 	         ${VARS_ADV[@]} )

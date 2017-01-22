@@ -14,9 +14,10 @@ HGRID_LIST=( 1440x720 )
 TGRID_LIST=( tstep monthly_mean )
 
 #----- VAR
-VARS=( \
-    sa_tppn      \
+VARS=(
+    sa_tppn
     )
 
 #----- Analysis flag
 FLAG_TSTEP_REDUCE=1
+FLAG_MM_ZM=1
