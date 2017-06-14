@@ -24,9 +24,11 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
     [ ! -d ${INPUT_DIR_CTL} ] && { echo "  -> skip!" ; continue ; }
 
     if [ "${SEP_DIR_LIST[$i]}" = "1"  ] ; then
-	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl ) ) || exit 1
+#	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl ) ) || exit 1
+	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl 2> /dev/null ) )
     else
-	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl ) ) || exit 1
+#	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl ) ) || exit 1
+	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl 2> /dev/null ) )
     fi
     for TMP in ${TMP_LIST[@]} ; do
 	VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
