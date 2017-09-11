@@ -83,9 +83,9 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of input data
     #
     if [ "${START_HMS}" != "000000" ] ; then
-	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD:0:6}01]" ) ) || exit 1
     else
-	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
+	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD:0:6}01)" ) ) || exit 1
     fi
     if [ "${FLAG[0]}" != "ok" ] ; then
         echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
