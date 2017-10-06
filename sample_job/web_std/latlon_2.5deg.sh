@@ -24,6 +24,7 @@ VARS=(
     sa_lh_sfc
     sa_lwd_sfc
     sa_lwu_sfc
+    sa_lwd_toa
     sa_lwu_toa
     sa_lwu_toa_c
     sa_q2m
