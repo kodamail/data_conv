@@ -43,7 +43,7 @@ INC_SUBVARS="yes"
 
 . cnf/common.sh
 if [ -f ./cnf/${CNFID}.sh ] ; then
-    . ./cnf/${CNFID}.sh
+    . ./cnf/${CNFID}.sh ${CNFID}
 else
     echo "error in common.sh: ./cnf/${CNFID}.sh does not exist."
     exit 1
