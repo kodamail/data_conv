@@ -126,6 +126,9 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    # assuming that CHSUBs are same directory structure with each other.
 	    OUTPUT_DATA_TEMPLATE=""
 	    for CHSUB in ${CHSUB_LIST[@]} ; do
+		if [ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} -a ! -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ] ; then
+		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}  # symbolic link is broken
+		fi
 		if [ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ] ; then
 		    [ ${USE_OLD} -eq 1 ] && continue
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}
