@@ -59,15 +59,27 @@ for VAR in ${VAR_LIST[@]} ; do
         fi
     fi
 
-    if [ "${VAR}" = "ss_ws10m" ] ; then
-	INPUT_CTL_LIST=( 
-	    ${INOUT_DIR}/ss_u10m/ss_u10m.ctl
-	    ${INOUT_DIR}/ss_v10m/ss_v10m.ctl
-	    )
-	INPUT_CTL_REF=${INPUT_CTL_LIST[0]}
-	INPUT_VAR_REF=ss_u10m
-	GRADS_VAR="sqrt(ss_u10m.1*ss_u10m.1+ss_v10m.2*ss_v10m.2)"
-    fi
+    
+    case "${VAR}" in
+	"ss_ws10m")
+	    INPUT_CTL_LIST=( 
+		${INOUT_DIR}/ss_u10m/ss_u10m.ctl
+		${INOUT_DIR}/ss_v10m/ss_v10m.ctl
+		)
+	    INPUT_CTL_REF=${INPUT_CTL_LIST[0]}
+	    INPUT_VAR_REF=ss_u10m
+	    GRADS_VAR="sqrt(ss_u10m.1*ss_u10m.1+ss_v10m.2*ss_v10m.2)"
+	    ;;
+	"ms_ws_p850")
+	    INPUT_CTL_LIST=( 
+		${INOUT_DIR}/ms_u_p850/ms_u_p850.ctl
+		${INOUT_DIR}/ms_v_p850/ms_v_p850.ctl
+		)
+	    INPUT_CTL_REF=${INPUT_CTL_LIST[0]}
+	    INPUT_VAR_REF=ms_u_p850
+	    GRADS_VAR="sqrt(ms_u_p850.1*ms_u_p850.1+ms_v_p850.2*ms_v_p850.2)"
+	    ;;
+    esac
 
     for INPUT_CTL in ${INPUT_CTL_LIST[@]} ; do
 	if [ ! -f "${INPUT_CTL}" ] ; then
@@ -104,8 +116,6 @@ for VAR in ${VAR_LIST[@]} ; do
     let TMP_MN=TMP_H*60+TMP_M
     let TDEF_FILE=60*60*24/TDEF_INCRE_SEC       # number of time step per file
     let TDEF_SEC_FILE=TDEF_INCRE_SEC*TDEF_FILE  # time in second per file
-
-
     #
     #---- generate control file (unified)
     #

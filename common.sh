@@ -178,7 +178,7 @@ function expand_vars()
     VARS_ISCCP=( $( ls ${DCONV_TOP_RDIR}/isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
     VARS_LL=(    $( ls ${DCONV_TOP_RDIR}/ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_ML=(    $( ls ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x*/tstep 2>/dev/null ) \
-	            ms_omega ms_z )
+	            ms_omega ms_z ms_ws_p850 )
     VARS_OL=(    $( ls ${DCONV_TOP_RDIR}/ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_SL=(    $( ls ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) \
 	            ss_ws10m )
