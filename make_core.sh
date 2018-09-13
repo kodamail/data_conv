@@ -93,7 +93,6 @@ for DIR_INOUT in ${DIR_INOUT_LIST[@]} ; do
 		ln -s ../${PERIOD}/${VAR} || exit 1
 		cd - > /dev/null || exit 1
 	    fi
-
 	done
     done
 done

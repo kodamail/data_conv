@@ -21,18 +21,16 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
     INPUT_CTL_LIST=()
     VAR_LIST=()
     echo ${INPUT_DIR_CTL}
-    [ ! -d ${INPUT_DIR_CTL} ] && { echo "  -> skip!" ; continue ; }
+    [[ ! -d ${INPUT_DIR_CTL} ]] && { echo "  -> skip!" ; continue ; }
 
-    if [ "${SEP_DIR_LIST[$i]}" = "1"  ] ; then
-#	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl ) ) || exit 1
+    if [[ "${SEP_DIR_LIST[$i]}" = "1"  ]] ; then
 	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl 2> /dev/null ) )
     else
-#	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl ) ) || exit 1
-	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl 2> /dev/null ) )
+	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl   2> /dev/null ) )
     fi
     for TMP in ${TMP_LIST[@]} ; do
 	VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
-	if [ ${VDEF} = 1 ] ; then
+	if [[ ${VDEF} = 1 ]] ; then
 	    INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
 	    VAR_LIST[${#VAR_LIST[@]}]=$( echo "${TMP}" | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) || exit 1
 	else
@@ -47,20 +45,22 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
     for(( j=0; $j<${#VAR_LIST[@]}; j=$j+1 )) ; do
 	VAR=${VAR_LIST[$j]}
 	INPUT_CTL=${INPUT_CTL_LIST[$j]}
+	[[ "${VAR}" != "dfq_isccp2" ]] && continue
 	echo "  ${VAR}"
         #
         # detrmine type of the variable
         #
-	TAG_TEMP=${VAR:0:1}
-	if [ "${TAG_TEMP}" = "s" ] ; then
+	if [[ "${VAR:0:1}" = "s" ]] ; then
 	    TAG="sl"
-	elif [ "${TAG_TEMP}" = "m" ] ; then
+	elif [[ "${VAR}" =~ _p[0-9]+$ ]] ; then
+	    TAG="ml_plev"
+	elif [[ "${VAR:0:1}" = "m" ]] ; then
 	    TAG=${INPUT_ML}
-	elif [ "${TAG_TEMP}" = "o" ] ; then
+	elif [[ "${VAR:0:1}" = "o" ]] ; then
 	    TAG="ol"
-	elif [ "${TAG_TEMP}" = "l" ] ; then
+	elif [[ "${VAR:0:1}" = "l" ]] ; then
 	    TAG="ll"
-	elif [ "${VAR}" = "dfq_isccp2" ] ; then
+	elif [[ "${VAR}" = "dfq_isccp2" || "${VAR}" = "ds_isccp2" ]] ; then
 	    TAG="isccp"
 	else
 	    echo "${VAR} is not supported."
@@ -77,25 +77,29 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
         DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
 	XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
-	[ "${ZDEF}" = "0" ] && ZDEF=1
-
-	if [ "${INPUT_TIME}" = "monthly_mean" ] ; then
+	[[ "${ZDEF}" = "0" ]] && ZDEF=1
+	if [[ ${ZDEF} == 1 && "${TAG}" == "ml_plev" ]] ; then
+            PLEV=( $( grads_ctl.pl ${INPUT_CTL} ZDEF 1 ) ) || exit 1
+	else
+	    PLEV=""
+	fi
+	if [[ "${INPUT_TIME}" = "monthly_mean" ]] ; then
 	    PERIOD="monthly_mean"
 	else
 	    TDEF_INCRE_MN=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit MN | sed -e "s|MN$||" ) || exit 1
 	    TDEF_INCRE_HR=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit HR | sed -e "s|HR$||" ) || exit 1
 	    TDEF_INCRE_DY=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit DY | sed -e "s|DY$||" ) || exit 1
-	    if [ ${TDEF_INCRE_MN} -lt 60 ] ; then
+	    if [[ ${TDEF_INCRE_MN} -lt 60 ]] ; then
 		PERIOD="${TDEF_INCRE_MN}mn"
-	    elif [ ${TDEF_INCRE_HR} -lt 24 ] ; then
+	    elif [[ ${TDEF_INCRE_HR} -lt 24 ]] ; then
 		PERIOD="${TDEF_INCRE_HR}hr"
 	    else
 		PERIOD="${TDEF_INCRE_DY}dy"
 	    fi
 	    SA=${VAR:1:1}
-	    if [ "${SA}" = "a" -o "${VAR}" = "dfq_isccp2" ] ; then  # mean
+	    if [[ "${SA}" == "a" || "${VAR}" == "dfq_isccp2" ]] ; then  # mean
 		PERIOD="${PERIOD}_mean"
-	    elif [ "${SA}" = "s" -o "${SA}" = "l" ] ; then  # snapshot
+	    elif [[ "${SA}" == "s" || "${SA}" == "l" || "${VAR}" == "ds_isccp2" ]] ; then  # snapshot
 		PERIOD="${PERIOD}_tstep"
 	    else
 		echo "error in $0: SA=${SA} is not supported."
@@ -103,22 +107,24 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    fi
 	fi
 
-	if [ "${ZDEF}" = "1" -o "${TAG}" = "ll" ] ; then
+	if [[ "${PLEV}" != "" ]] ; then
+	    OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}_p${PLEV}/${PERIOD}/${VAR}
+	elif [[ "${ZDEF}" = "1" || "${TAG}" = "ll" ]] ; then
 	    OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
 	else
 	    OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}x${ZDEF}/${PERIOD}/${VAR}
-	fi 
+	fi
 	mkdir -p ${OUTPUT_DIR}
 	touch ${OUTPUT_DIR}/_locked    # raw data flag
 
-	if [ "${INPUT_TIME}" = "tstep" ] ; then
+	if [[ "${INPUT_TIME}" == "tstep" ]] ; then
 	    OUTPUT_DIR2=$( echo "${OUTPUT_DIR}" | sed -e "s|/${PERIOD}/|/tstep/|" )
 	    mkdir -p ${OUTPUT_DIR2%/*}
 	    rm -f ${OUTPUT_DIR2}
 	    ln -s ../${PERIOD}/${VAR} ${OUTPUT_DIR2}
 	fi
 
-	if [ ${#CHSUB_LIST[@]} -gt 0 ] ; then
+	if [[ ${#CHSUB_LIST[@]} -gt 0 ]] ; then
 	    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
 	    sed ${INPUT_CTL} -e "s|^DSET .*$|DSET ^%ch/${VAR}.${EXT}|i" \
 		> ${OUTPUT_CTL} || exit 1
@@ -126,15 +132,15 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    # assuming that CHSUBs are same directory structure with each other.
 	    OUTPUT_DATA_TEMPLATE=""
 	    for CHSUB in ${CHSUB_LIST[@]} ; do
-		if [ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} -a ! -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ] ; then
+		if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} && ! -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}  # symbolic link is broken
 		fi
-		if [ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ] ; then
-		    [ ${USE_OLD} -eq 1 ] && continue
+		if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
+		    [[ ${USE_OLD} -eq 1 ]] && continue
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}
 		fi
 		INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB}${INPUT_DATA_TEMPLATE_TAIL}
-		if [ ! -f ${INPUT_DATA} ] ; then
+		if [[ ! -f ${INPUT_DATA} ]] ; then
 		    echo "    info: break at ${CHSUB}."
 		    CHSUB_BREAK_LIST=( ${CHSUB_BREAK_LIST[@]} ${CHSUB} )
 		    break
@@ -142,7 +148,7 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 		mkdir -p ${OUTPUT_DIR}/${CHSUB}
 
 		# just for once
-		if [ "${OUTPUT_DATA_TEMPLATE}" = "" ] ; then
+		if [[ "${OUTPUT_DATA_TEMPLATE}" == "" ]] ; then
 		    INPUT_DIR_DATA=${INPUT_DATA%/*}
 		    DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
 		    DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}/|%ch/|g" )
@@ -161,9 +167,9 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    for FILE in ${FILE_LIST[@]} ; do
 		rm -f ${OUTPUT_DIR}/${FILE}
 		ln -s ${LINK_DIR}/${FILE} ${OUTPUT_DIR}/${FILE}
-		[ "${FILE}" = "${VAR}.ctl" ] && FLAG=1
+		[[ "${FILE}" == "${VAR}.ctl" ]] && FLAG=1
 	    done
-	    if [ ${FLAG} -eq 0 ] ; then
+	    if [[ ${FLAG} -eq 0 ]] ; then
 		rm -f ${OUTPUT_DIR}/${VAR}.ctl
 		ln -s ${LINK_DIR}/${INPUT_CTL##*/} ${OUTPUT_DIR}/${VAR}.ctl
 	    fi
@@ -171,7 +177,7 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
     done
 done
 
-if [ ${#CHSUB_BREAK_LIST[*]} -gt 0 ] ; then
+if [[ ${#CHSUB_BREAK_LIST[*]} -gt 0 ]] ; then
     IFS=$'\n'
     CHSUB_BREAK_MIN=$( echo "${CHSUB_BREAK_LIST[*]}" | sort | head -n 1 )
     echo ""
