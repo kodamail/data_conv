@@ -6,6 +6,7 @@ CNFID=$1
 JOB=$2
 
 echo "$0 started."
+export LANG=C
 date
 
 . ./common.sh ${CNFID} || exit 1
@@ -55,6 +56,46 @@ for TGRID in ${TGRID_LIST[@]} ; do
 	echo "#"
 	break
     fi
+done
+#
+########## derived variables ##########
+#
+VARS_ANA=( )
+if [ ${FLAG_TSTEP_DERIVE} -eq 1 ] ; then
+    VARS_ANA=( ss_ws10m )
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
+fi
+DIR_INOUT_LIST=()
+for DIR_INOUT in \
+    ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep     \
+    ; do
+    [ -d "${DIR_INOUT}" ] && DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
+done
+
+for DIR_INOUT in ${DIR_INOUT_LIST[@]} ; do
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
+	#
+	for VAR in ${VARS_ANA[@]} ; do
+	    echo ${DIR_INOUT}
+	    ./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		${DIR_INOUT} \
+		${OVERWRITE} ${VAR} || exit 1
+
+	    PERIOD=$( tstep_2_period ${DIR_INOUT}/${VAR}/${VAR}.ctl ) || exit 1
+
+	    mkdir -p ${DIR_INOUT}/../${PERIOD}
+	    if [ ! -d ${DIR_INOUT}/../${PERIOD}/${VAR} ] ; then
+		mv ${DIR_INOUT}/${VAR} ${DIR_INOUT}/../${PERIOD}/ || exit 1
+		cd ${DIR_INOUT} || exit 1
+		ln -s ../${PERIOD}/${VAR} || exit 1
+		cd - > /dev/null || exit 1
+	    fi
+
+	done
+    done
 done
 #
 ########## reduce grid ##########
