@@ -63,51 +63,51 @@ function conv_dir()
     local CNTL=$2
     local TARGET=$( echo ${CNTL} | cut -d = -f 1 )
     local VALUE=$( echo ${CNTL} | cut -d = -f 2 )
-#    local TAG_LIST=( advanced isccp ll ml_plev ml_zlev ol sl )
     local TDEF_LIST=( tstep 1dy_mean monthly_mean )
     local KEY_LIST=( isccp ll ml_zlev ml_plev ol sl )
 
-    if [ "${TARGET}" = "XDEF" -a ${VALUE} = "ZMEAN" ] ; then
+    if [[ "${TARGET}" = "XDEF" && ${VALUE} = "ZMEAN" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
-	  # 320x160x18   -> zmean_160x18
-	  # 320x160      -> zmean_160
-	  # 320x160_p850 -> zmean_160_p850
-	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/zmean_|" )
+	    # 320x160x18   -> zmean_160x18
+	    # 320x160      -> zmean_160
+	    # 320x160_p850 -> zmean_160_p850
+	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/zmean_|" )
 	done
 
-    elif [ "${TARGET}" = "XDEF" -a ${VALUE} = "MMZMEAN" ] ; then
+    elif [[ "${TARGET}" = "XDEF" && ${VALUE} = "MMZMEAN" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
-	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/mm_zmean_|" )
+	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x|${KEY}/mm_zmean_|" )
 	done
 
-    elif [ "${TARGET}" = "XYDEF" ] ; then
+    elif [[ "${TARGET}" = "XYDEF" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
 	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x[0-9][0-9]*/|${KEY}/${VALUE}/|" )
 	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)/|${KEY}/${VALUE}\1/|" )
+	  DIR=$( echo ${DIR} | sed -e "s|${KEY}/[0-9][0-9]*x[0-9][0-9]*\(_p[0-9][0-9]*\)/|${KEY}/${VALUE}\1/|" )
 	done
 
-    elif [ "${TARGET}" = "ZDEF" ] ; then
+    elif [[ "${TARGET}" = "ZDEF" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
 	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${KEY}/\1x${VALUE}/|" )
 	done
 
-    elif [ "${TARGET}" = "ZLEV" ] ; then
+    elif [[ "${TARGET}" = "ZLEV" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
 	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${KEY}/\1_p${VALUE}/|" )
 	done
 
-    elif [ "${TARGET}" = "TAG" ] ; then
+    elif [[ "${TARGET}" = "TAG" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
 	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)\)*/|${VALUE}/\1/|" )
 	done
 
-    elif [ "${TARGET}" = "TDEF" ] ; then
+    elif [[ "${TARGET}" = "TDEF" ]] ; then
 	for TDEF in ${TDEF_LIST[@]} ; do
 	    DIR=$( echo ${DIR} | sed -e "s|${TDEF}|${VALUE}|" )
 	done
     fi
 
-    if [ "${DIR}" = "${DIR_IN}" ] ; then
+    if [[ "${DIR}" = "${DIR_IN}" ]] ; then
 	echo "error in conv_dir: " 1>&2
 	echo "  DIR_IN and DIR_OUT are same: ${DIR_IN}" 1>&2
 	exit 1

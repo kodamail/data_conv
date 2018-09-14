@@ -71,13 +71,14 @@ DIR_IN_LIST=()
 for DIR_IN in \
     ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep           \
     ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}x*/tstep    \
-    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p850/tstep \
+    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p*/tstep \
     ; do
     [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
 for HGRID  in ${HGRID_LIST[@]}  ; do
-    [[ ! "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT}(_p850)*$ ]] && continue
+#    [[ ! "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT}(_p850)*$ ]] && continue
+    [[ ! "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT}$ ]] && continue
     for VAR in ${VARS_ANA[@]} ; do
 	INPUT_CTL_REF=""
 	case "${VAR}" in
@@ -118,13 +119,19 @@ DIR_IN_LIST=()
 for DIR_IN in \
     ${DCONV_TOP_RDIR}/isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep \
     ${DCONV_TOP_RDIR}/{ll,ol,sl}/${XDEF_NAT}x${YDEF_NAT}/tstep          \
-    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x${ZDEF}/tstep ; do
+    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x${ZDEF}/tstep \
+    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p*/tstep \
+    ; do
     [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
     for HGRID in ${HGRID_LIST[@]} ; do
-	[ "${HGRID}" = "${XDEF_NAT}x${YDEF_NAT}" ] && continue
-	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
+	[[ "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT} ]] && continue
+#	[[ "${HGRID}" = "${XDEF_NAT}x${YDEF_NAT}" ]] && continue
+#	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
+
+	[[ ! "${HGRID}" =~ ^[0-9]+x[0-9]+(_p850)*$ ]] && continue
+
 	#
 	for VAR in ${VARS_ANA[@]} ; do
 	    INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
