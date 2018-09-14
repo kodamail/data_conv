@@ -485,6 +485,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	for DIR_IN in \
 	    ${DCONV_TOP_RDIR}/{ll,ol,sl}/${HGRID}/tstep          \
 	    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}x${ZDEF}/tstep \
+	    ${DCONV_TOP_RDIR}/ml_plev/${HGRID}/tstep \
 	    ${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	done
