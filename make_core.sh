@@ -67,30 +67,35 @@ if [ ${FLAG_TSTEP_DERIVE} -eq 1 ] ; then
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
-DIR_INOUT_LIST=()
-for DIR_INOUT in \
+DIR_IN_LIST=()
+for DIR_IN in \
     ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep           \
+    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}x*/tstep      \
     ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p850/tstep \
     ; do
-    [ -d "${DIR_INOUT}" ] && DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
+    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
 
-for DIR_INOUT in ${DIR_INOUT_LIST[@]} ; do
+for DIR_IN in ${DIR_IN_LIST[@]} ; do
     for HGRID in ${HGRID_LIST[@]} ; do
 #	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+\(_p850\)*//" )" != "" ] && continue
 	#
 	for VAR in ${VARS_ANA[@]} ; do
-#	    echo ${DIR_INOUT}
+#	    echo ${DIR_IN}
+	    DIR_OUT=${DIR_IN}
+	    if [[ "${VAR}" = "ms_ws_p850" ]] ; then
+		DIR_OUT=$( echo "${DIR_IN}" | sed -e "s|/${XDEF_NAT}x${YDEF_NAT}x[0-9]\+/|/${XDEF_NAT}x${YDEF_NAT}_p850/|" )
+	    fi
 	    ./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		${DIR_INOUT} \
+		${DIR_IN} ${DIR_OUT} \
 		${OVERWRITE} ${VAR} || exit 1
-	    [[ ! -f ${DIR_INOUT}/${VAR}/${VAR}.ctl ]] && continue
-	    PERIOD=$( tstep_2_period ${DIR_INOUT}/${VAR}/${VAR}.ctl ) || exit 1
-	    mkdir -p ${DIR_INOUT}/../${PERIOD}
-	    if [ ! -d ${DIR_INOUT}/../${PERIOD}/${VAR} ] ; then
-		mv ${DIR_INOUT}/${VAR} ${DIR_INOUT}/../${PERIOD}/ || exit 1
-		cd ${DIR_INOUT} || exit 1
+	    [[ ! -f ${DIR_OUT}/${VAR}/${VAR}.ctl ]] && continue
+	    PERIOD=$( tstep_2_period ${DIR_OUT}/${VAR}/${VAR}.ctl ) || exit 1
+	    mkdir -p ${DIR_OUT}/../${PERIOD}
+	    if [ ! -d ${DIR_OUT}/../${PERIOD}/${VAR} ] ; then
+		mv ${DIR_OUT}/${VAR} ${DIR_OUT}/../${PERIOD}/ || exit 1
+		cd ${DIR_OUT} || exit 1
 		ln -s ../${PERIOD}/${VAR} || exit 1
 		cd - > /dev/null || exit 1
 	    fi
@@ -485,6 +490,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	for DIR_IN in \
 	    ${DCONV_TOP_RDIR}/{ll,ol,sl}/${HGRID}/tstep          \
 	    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}x${ZDEF}/tstep \
+	    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}_*/tstep \
 	    ${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 	done
