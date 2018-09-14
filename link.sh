@@ -45,7 +45,6 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
     for(( j=0; $j<${#VAR_LIST[@]}; j=$j+1 )) ; do
 	VAR=${VAR_LIST[$j]}
 	INPUT_CTL=${INPUT_CTL_LIST[$j]}
-#	[[ "${VAR}" != "dfq_isccp2" ]] && continue
 	echo "  ${VAR}"
         #
         # detrmine type of the variable
