@@ -56,9 +56,9 @@ for TGRID in ${TGRID_LIST[@]} ; do
 	echo "#"
 	break
     fi
-done
+done  # loop: TGRID
 #
-########## derived variables ##########
+########## derived variables for native grid variables ##########
 #
 VARS_ANA=( )
 if [ ${FLAG_TSTEP_DERIVE} -eq 1 ] ; then
@@ -70,38 +70,40 @@ fi
 DIR_IN_LIST=()
 for DIR_IN in \
     ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep           \
-    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}x*/tstep      \
+    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}x*/tstep    \
     ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p850/tstep \
     ; do
     [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
 done
-
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
-    for HGRID in ${HGRID_LIST[@]} ; do
-#	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
-	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+\(_p850\)*//" )" != "" ] && continue
-	#
-	for VAR in ${VARS_ANA[@]} ; do
-#	    echo ${DIR_IN}
-	    DIR_OUT=${DIR_IN}
-	    if [[ "${VAR}" = "ms_ws_p850" ]] ; then
-		DIR_OUT=$( echo "${DIR_IN}" | sed -e "s|/${XDEF_NAT}x${YDEF_NAT}x[0-9]\+/|/${XDEF_NAT}x${YDEF_NAT}_p850/|" )
-	    fi
-	    ./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		${DIR_IN} ${DIR_OUT} \
-		${OVERWRITE} ${VAR} || exit 1
-	    [[ ! -f ${DIR_OUT}/${VAR}/${VAR}.ctl ]] && continue
-	    PERIOD=$( tstep_2_period ${DIR_OUT}/${VAR}/${VAR}.ctl ) || exit 1
-	    mkdir -p ${DIR_OUT}/../${PERIOD}
-	    if [ ! -d ${DIR_OUT}/../${PERIOD}/${VAR} ] ; then
-		mv ${DIR_OUT}/${VAR} ${DIR_OUT}/../${PERIOD}/ || exit 1
-		cd ${DIR_OUT} || exit 1
-		ln -s ../${PERIOD}/${VAR} || exit 1
-		cd - > /dev/null || exit 1
-	    fi
-	done
-    done
-done
+for HGRID  in ${HGRID_LIST[@]}  ; do
+    [[ ! "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT}(_p850)*$ ]] && continue
+    for VAR in ${VARS_ANA[@]} ; do
+	INPUT_CTL_REF=""
+	case "${VAR}" in
+	    "ss_ws10m")   [[ ! -f ${DIR_IN}/ss_u10m/ss_u10m.ctl ]] && continue ;;
+	    "ms_ws_p850") [[ ! -f ${DIR_IN}/ms_u/ms_u.ctl && ! -f ${DIR_IN}/ms_u_p850/ms_u_p850.ctl ]] && continue ;;
+	esac
+	DIR_OUT=${DIR_IN}
+	if [[ "${VAR}" = "ms_ws_p850" ]] ; then
+	    DIR_OUT=$( echo "${DIR_IN}" | sed -e "s|/${XDEF_NAT}x${YDEF_NAT}x[0-9]\+/|/${XDEF_NAT}x${YDEF_NAT}_p850/|" )
+	fi
+	./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+	    ${DIR_IN} ${DIR_OUT} \
+	    ${OVERWRITE} ${VAR} || exit 1
+	[[ ! -f ${DIR_OUT}/${VAR}/${VAR}.ctl ]] && continue
+	PERIOD=$( tstep_2_period ${DIR_OUT}/${VAR}/${VAR}.ctl ) || exit 1
+	mkdir -p ${DIR_OUT}/../${PERIOD}
+	if [ ! -d ${DIR_OUT}/../${PERIOD}/${VAR} ] ; then
+	    mv ${DIR_OUT}/${VAR} ${DIR_OUT}/../${PERIOD}/ || exit 1
+	    cd ${DIR_OUT} || exit 1
+	    ln -s ../${PERIOD}/${VAR} || exit 1
+	    cd - > /dev/null || exit 1
+	fi
+    done  # loop: VAR
+done  # loop: HGRID
+done  # loop: DIR_IN
+
 #
 ########## reduce grid ##########
 #
