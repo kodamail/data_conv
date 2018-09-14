@@ -48,18 +48,6 @@ for VAR in ${VAR_LIST[@]} ; do
 	echo "info: ${INPUT_DIR} is locked."
 	continue
     fi
-    #
-    #----- check existence of output data
-    #
-    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
-        FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-        if [ "${FLAG[0]}" = "ok" ] ; then
-            echo "info: Output data already exist."
-            continue
-        fi
-    fi
-    
     case "${VAR}" in
 	"ss_ws10m")
 	    INPUT_CTL_LIST=( 
@@ -95,6 +83,17 @@ for VAR in ${VAR_LIST[@]} ; do
 	    continue 2
 	fi
     done
+    #
+    #----- check existence of output data
+    #
+    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
+    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+        FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+        if [ "${FLAG[0]}" = "ok" ] ; then
+            echo "info: Output data already exist."
+            continue
+        fi
+    fi
     #
     #----- get number of grids for input/output
     #
