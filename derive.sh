@@ -58,7 +58,6 @@ for VAR in ${VAR_LIST[@]} ; do
             continue
         fi
     fi
-
     
     case "${VAR}" in
 	"ss_ws10m")
@@ -81,25 +80,6 @@ for VAR in ${VAR_LIST[@]} ; do
 	    ;;
     esac
 
-    for INPUT_CTL in ${INPUT_CTL_LIST[@]} ; do
-	if [ ! -f "${INPUT_CTL}" ] ; then
-	    echo "warning: ${INPUT_CTL} does not exist."
-	    continue 2
-	fi
-        #
-        #----- check existence of input data
-        #
-	if [ "${START_HMS}" != "000000" ] ; then
-	    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-	else
-	    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
-	fi
-	if [ "${FLAG[0]}" != "ok" ] ; then
-	    echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
-	    continue 2
-	fi
-    #
-    done
     #
     #----- get number of grids for input/output
     #
@@ -117,15 +97,45 @@ for VAR in ${VAR_LIST[@]} ; do
     let TDEF_FILE=60*60*24/TDEF_INCRE_SEC       # number of time step per file
     let TDEF_SEC_FILE=TDEF_INCRE_SEC*TDEF_FILE  # time in second per file
     #
+    #----- check existence of input data
+    #
+    for INPUT_CTL in ${INPUT_CTL_LIST[@]} ; do
+	if [ ! -f "${INPUT_CTL}" ] ; then
+	    echo "warning: ${INPUT_CTL} does not exist."
+	    continue 2
+	fi
+	if [ "${START_HMS}" != "000000" ] ; then
+	    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
+	else
+	    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
+	fi
+	if [ "${FLAG[0]}" != "ok" ] ; then
+	    echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
+	    continue 2
+	fi
+    #
+    done
+    #
     #---- generate control file (unified)
     #
     mkdir -p ${INOUT_DIR}/${VAR}/log || exit 1
+    if [ "${START_HMS}" != "000000" ] ; then
+	DSET="DSET ^%ch/${VAR}.grd"
+    else
+	DSET="DSET ^%y4/${VAR}_%y4%m2%d2.grd"
+    fi
     grads_ctl.pl ${INPUT_CTL_REF}    \
-	--set "DSET ^%ch/${VAR}.grd" \
+	--set "${DSET}" \
 	--set "OPTIONS template big_endian" \
 	--set "UNDEF -0.99900E+35"   \
-	| sed -e "s/${INPUT_VAR_REF}/${VAR}/g" \
+	| sed -e "/^VARS/,/^ENDVARS/d" \
 	> ${OUTPUT_CTL} || exit 1
+    cat >> ${OUTPUT_CTL} <<EOF
+VARS 1
+${VAR} 0 99 ${VAR}
+ENDVARS
+EOF
+    # | sed -e "s/${INPUT_VAR_REF}/${VAR}/g" \
     #
     #========================================#
     #  date loop (for each file)
@@ -152,8 +162,13 @@ for VAR in ${VAR_LIST[@]} ; do
         # File name convention
         #   2004/ms_tem_20040601.grd  (center of the date if incre > 1dy)
 	#
-	OUTPUT_DATA=${INOUT_DIR}/${VAR}/${YEAR}/${YMD}.000000-${YMDPP}.000000/${VAR}.grd
-        mkdir -p ${INOUT_DIR}/${VAR}/${YEAR}/${YMD}.000000-${YMDPP}.000000 || exit 1
+        if [ "${START_HMS}" != "000000" ] ; then
+	    OUTPUT_DATA=${INOUT_DIR}/${VAR}/${YEAR}/${YMD}.000000-${YMDPP}.000000/${VAR}.grd
+	else
+	    OUTPUT_DATA=${INOUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.grd
+	fi
+#        mkdir -p ${INOUT_DIR}/${VAR}/${YEAR}/${YMD}.000000-${YMDPP}.000000 || exit 1
+        mkdir -p ${OUTPUT_DATA%/*} || exit 1
 	#
         #----- output file exist?
 	#
@@ -180,8 +195,6 @@ for VAR in ${VAR_LIST[@]} ; do
         else
             TMIN=$( grads_time2t.sh ${INPUT_CTL} ${YMD}   -ge ) || exit 1
             TMAX=$( grads_time2t.sh ${INPUT_CTL} ${YMDPP} -lt ) || exit 1
-            echo "It is not fully checked until now. Please check!"
-            exit 1
         fi
 	cd ${TEMP_DIR}
 	cat > temp.gs <<EOF
