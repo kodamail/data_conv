@@ -81,7 +81,7 @@ for DIR_INOUT in ${DIR_INOUT_LIST[@]} ; do
 	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+\(_p850\)*//" )" != "" ] && continue
 	#
 	for VAR in ${VARS_ANA[@]} ; do
-	    echo ${DIR_INOUT}
+#	    echo ${DIR_INOUT}
 	    ./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		${DIR_INOUT} \
 		${OVERWRITE} ${VAR} || exit 1

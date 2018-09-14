@@ -192,8 +192,6 @@ for VAR in ${VAR_LIST[@]} ; do
 	else
             TMIN=$( grads_time2t.sh ${INPUT_CTL} ${YM}01   -ge ) || exit 1
             TMAX=$( grads_time2t.sh ${INPUT_CTL} ${YMPP}01 -lt ) || exit 1
-	    echo "It is not fully checked. Please check!"
-	    exit 1
 	fi
 	echo "YM=${YM} (TMIN=${TMIN}, TMAX=${TMAX})"
 	#
