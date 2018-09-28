@@ -135,7 +135,8 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}  # symbolic link is broken
 		fi
 		if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
-		    [[ ${USE_OLD} -eq 1 ]] && continue
+#		    [[ ${USE_OLD} -eq 1 ]] && continue
+		    [[ ${USE_OLD} -eq 1 && -e ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] && continue
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}
 		fi
 		INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB}${INPUT_DATA_TEMPLATE_TAIL}
