@@ -8,7 +8,16 @@
 #. ./usr/cnf_def.sh
 
 CNFID=${1:-def}   # CNFID if any ("def" by default)
-
+if [[ -f ./cnf/${CNFID}.sh ]] ; then
+    continue
+elif [[ -f ${CNFID} ]] ; then
+    CNFID=${CNFID%.sh}
+    CNFID=${CNFID#./}
+    CNFID=${CNFID#cnf/}
+else
+    echo "usage: ./link.sh [ CNFID | cnf-script-name ]"
+    exit 1
+fi
 . ./common.sh ${CNFID} || exit 1
 
 #----------------------------------------#
