@@ -155,24 +155,30 @@ done
 ########## z -> p ##########
 #
 # multi pressure levels in low horizontal resolution
+# (including p on z -> z on p)
 #
 VARS_ANA=( )
-if [ ${FLAG_TSTEP_Z2PRE} -eq 1 ] ; then
-    VARS_ANA=( ml )  # default variables
+if [[ ${FLAG_TSTEP_Z2PRE} -eq 1 ]] ; then
+    VARS_ANA=( ml ms_omega ma_omega )  # default variables
+
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
-DIR_IN_LIST=( )
+DIR_IN_LIST=()
 for HGRID in ${HGRID_LIST[@]} ; do
-    [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
+    [[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
     DIR_IN=${DCONV_TOP_RDIR}/ml_zlev/${HGRID}x${ZDEF}/tstep
-    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
+    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
 done
 for DIR_IN in ${DIR_IN_LIST[@]} ; do
     for VAR in ${VARS_ANA[@]} ; do
-	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
-	[ ! -f "${INPUT_CTL}" ] && continue
+	if [[ "${VAR:3}" = "z" ]] ; then
+	    INPUT_CTL=${DIR_IN}/m${VAR:1:1}_pres/m${VAR:1:1}_pres.ctl
+	else
+	    INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
+	fi
+	[[ ! -f "${INPUT_CTL}" ]] && continue
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 	#
@@ -185,9 +191,15 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 		DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || exit 1
 	    fi
 	    #
-	    ./z2pre.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		${DIR_IN_NEW} ${DIR_OUT} \
-		${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+	    if [[ "${VAR:3}" = "z" ]] ; then
+		./plev_z.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN_NEW} ${DIR_OUT} \
+		    ${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+	    else
+		./z2pre.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN_NEW} ${DIR_OUT} \
+		    ${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+	    fi
 	    #
 	    mkdir -p ${DIR_OUT}/../tstep || exit 1
 	    cd ${DIR_OUT}/../tstep || exit 1
@@ -207,7 +219,7 @@ if [ ${FLAG_TSTEP_PLEVOMEGA} -eq 1 ] ; then
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 fi
-DIR_IN_LIST=( )
+DIR_INOUT_LIST=( )
 PDEF_LEVELS_IN_LIST=( )
 PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
 for HGRID in ${HGRID_LIST[@]} ; do
@@ -241,13 +253,6 @@ for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
 	    ${DIR_INOUT_NEW} \
 	    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || exit 1
 	#
-#	RESULT=$( diff ${DIR_INOUT_NEW}/ms_w/ms_w.ctl ${DIR_INOUT_NEW}/../tstep/ms_w/ms_w.ctl ) || exit 1
-#	if [ "${RESULT}" = "" ] ; then
-#	    mkdir -p ${DIR_INOUT}/../tstep
-#	    cd ${DIR_INOUT}/../tstep
-#	    [ ! -d ${VAR} -a ! -L ${VAR} ] && ln -s ../${PERIOD}/${VAR}
-#	    cd - > /dev/null
-#	fi
 	mkdir -p ${DIR_INOUT}/../tstep || exit 1
 	cd ${DIR_INOUT}/../tstep || exit 1
 	[ ! -d "${VAR}" -a ! -L "${VAR}" ] && ln -s ../${PERIOD}/${VAR}
@@ -255,57 +260,6 @@ for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
     done
 done
 
-#
-# geopotantial height in low horizontal resolution
-#
-#if [ 1 -eq 2 ] ; then   # TODO: re-write
-#    DIR_IN_LIST=( )
-#    for KEY in ml_zlev ; do
-#	for HGRID in ${HGRID_LIST[@]} ; do
-#	    [ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
-#	    for TGRID in tstep ; do
-#		for DIR_IN in ../${KEY}/${HGRID}x${ZDEF_NAT}/${TGRID} ; do
-#		    [ -d ${DIR_IN} ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
-#		done
-#	    done
-#	done
-#    done
-#    for DIR_IN in ${DIR_IN_LIST[@]} ; do
-#	[ ! -d ${DIR_IN} ] && continue
-#	VARS_TSTEP_2_4=( $( expand_vars ${#VARS_TSTEP_2_4[@]} ${VARS_TSTEP_2_4[@]} ) )
-#	VARS_TEMP=( ${VARS_TSTEP_2_4[@]} )
-#	VARS_TEMP=( $( dep_var ${#VARS_TEMP[@]}  ${VARS_TEMP[@]} \
-#	    ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) )
-#	for VAR in ${VARS_TEMP[@]} ; do
-#	    [ "${VAR}" != "ms_z" ] && continue
-#	    PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
-#	#
-#	    INPUT_CTL=${DIR_IN}/ms_pres/ms_pres.ctl
-#	    PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
-#	    DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" )
-#	#
-#	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TAG=ml_plev ) || exit 1
-#	    if [ ${PDEF} -eq 1 ] ; then
-#		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS_LIST[0]} ) || exit 1
-#	    else
-#		DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || exit 1
-#	    fi
-#	    echo "error! plev_z.sh should be re-written!"
-#	    exit 1
-#	    ./plev_z.sh ${START_YMD} ${ENDPP_YMD} \
-#		${DIR_IN_NEW} ${DIR_OUT} \
-#		${PDEF_LEVELS_LIST[0]} ms_pres ${OVERWRITE} || exit 1
-#	#
-#	    RESULT=$( diff ${DIR_IN_NEW}/ms_pres/ms_pres.ctl ${DIR_IN_NEW}/../tstep/ms_pres/ms_pres.ctl ) || exit 1
-#	    if [ "${RESULT}" = "" ] ; then
-#		mkdir -p ${DIR_OUT}/../tstep
-#		cd ${DIR_OUT}/../tstep
-#	    [ ! -d ${VAR} -a ! -L ${VAR} ] && ln -s ../${PERIOD}/${VAR}
-#	    cd - > /dev/null
-#	    fi
-#	done
-#    done
-#
 ##
 ## vertical integral
 ##
