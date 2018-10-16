@@ -52,16 +52,19 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
     done
 
     for(( j=0; $j<${#VAR_LIST[@]}; j=$j+1 )) ; do
-	VAR=${VAR_LIST[$j]}
+	VAR_ORG=${VAR_LIST[$j]}
+	VAR=${VAR_ORG}
 	INPUT_CTL=${INPUT_CTL_LIST[$j]}
-	echo "  ${VAR}"
+	echo "  ${VAR_ORG}"
         #
         # detrmine type of the variable
         #
 	if [[ "${VAR:0:1}" = "s" ]] ; then
 	    TAG="sl"
-	elif [[ "${VAR}" =~ _p[0-9]+$ ]] ; then
+	elif [[ "${VAR}" =~ _p([0-9]+)$ ]] ; then
 	    TAG="ml_plev"
+#	    PLEV=${BASH_REMATCH[1]}
+	    VAR=${VAR%_p${BASH_REMATCH[1]}}
 	elif [[ "${VAR:0:1}" = "m" ]] ; then
 	    TAG=${INPUT_ML}
 	elif [[ "${VAR:0:1}" = "o" ]] ; then
@@ -80,16 +83,15 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
 	INPUT_DATA_TEMPLATE_HEAD=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
 	INPUT_DATA_TEMPLATE_TAIL=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
-
+	#
 	# dimension
 	CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
         DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
 	XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
 	[[ "${ZDEF}" = "0" ]] && ZDEF=1
+	PLEV=""
 	if [[ ${ZDEF} == 1 && "${TAG}" == "ml_plev" ]] ; then
             PLEV=( $( grads_ctl.pl ${INPUT_CTL} ZDEF 1 ) ) || exit 1
-	else
-	    PLEV=""
 	fi
 	if [[ "${INPUT_TIME}" = "monthly_mean" ]] ; then
 	    PERIOD="monthly_mean"
@@ -136,7 +138,11 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
 	    sed ${INPUT_CTL} -e "s|^DSET .*$|DSET ^%ch/${VAR}.${EXT}|i" \
 		> ${OUTPUT_CTL} || exit 1
-	    
+	    if [[ "${VAR}" != "${VAR_ORG}" ]] ; then
+		echo "VARS 1"             >> ${OUTPUT_CTL}
+		echo "${VAR_ORG}=>${VAR}" >> ${OUTPUT_CTL}
+		echo "ENDVARS"            >> ${OUTPUT_CTL}
+	    fi
 	    # assuming that CHSUBs are same directory structure with each other.
 	    OUTPUT_DATA_TEMPLATE=""
 	    for CHSUB in ${CHSUB_LIST[@]} ; do
@@ -161,7 +167,7 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 		    INPUT_DIR_DATA=${INPUT_DATA%/*}
 		    DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
 		    DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}/|%ch/|g" )
-		    OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR}.${EXT}
+		    OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR_ORG}.${EXT}
 		    OUTPUT_DATA_TEMPLATE_HEAD=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
 		    OUTPUT_DATA_TEMPLATE_TAIL=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
 		fi
