@@ -57,22 +57,13 @@ for VAR in ${VAR_LIST[@]} ; do
 #	    INPUT_VAR_REF=ss_u10m
 	    GRADS_VAR="sqrt(ss_u10m.1*ss_u10m.1+ss_v10m.2*ss_v10m.2)"
 	    ;;
-	"ms_ws_p850")
-	    if [ -f ${INPUT_DIR}/ms_u_p850/ms_u_p850.ctl ] ; then
-		INPUT_CTL_LIST=( 
-		    ${INPUT_DIR}/ms_u_p850/ms_u_p850.ctl
-		    ${INPUT_DIR}/ms_v_p850/ms_v_p850.ctl
-		    )
-#		INPUT_VAR_REF=ms_u_p850
-		GRADS_VAR="sqrt(ms_u_p850.1*ms_u_p850.1+ms_v_p850.2*ms_v_p850.2)"
-	    else
-		INPUT_CTL_LIST=( 
-		    ${INPUT_DIR}/ms_u/ms_u.ctl
-		    ${INPUT_DIR}/ms_v/ms_v.ctl
-		    )
-#		INPUT_VAR_REF=ms_u_p850
-		GRADS_VAR="sqrt(ms_u.1(lev=850)*ms_u.1(lev=850)+ms_v.2(lev=850)*ms_v.2(lev=850))"
-	    fi
+	"ms_ws")
+	    INPUT_CTL_LIST=( 
+		${INPUT_DIR}/ms_u/ms_u.ctl
+		${INPUT_DIR}/ms_v/ms_v.ctl
+	    )
+	    #		INPUT_VAR_REF=ms_u_p850
+	    GRADS_VAR="sqrt(ms_u.1*ms_u.1+ms_v.2*ms_v.2)"
 	    ;;
     esac
     INPUT_CTL_REF=${INPUT_CTL_LIST[0]}
@@ -142,10 +133,9 @@ for VAR in ${VAR_LIST[@]} ; do
 	> ${OUTPUT_CTL} || exit 1
     cat >> ${OUTPUT_CTL} <<EOF
 VARS 1
-${VAR} 0 99 ${VAR}
+${VAR} ${ZDEF} 99 ${VAR}
 ENDVARS
 EOF
-    # | sed -e "s/${INPUT_VAR_REF}/${VAR}/g" \
     #
     #========================================#
     #  date loop (for each file)
@@ -184,8 +174,8 @@ EOF
 	#
 	if [ -f "${OUTPUT_DATA}" ] ; then
 	    SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' ) || exit 1
-#	    SIZE_OUT_EXACT=$( echo 4*${XDEF}*${YDEF}*${ZDEF}*${TDEF_FILE} | bc ) || exit 1
-	    SIZE_OUT_EXACT=$( echo 4*${XDEF}*${YDEF}*1*${TDEF_FILE} | bc ) || exit 1
+	    SIZE_OUT_EXACT=$( echo 4*${XDEF}*${YDEF}*${ZDEF}*${TDEF_FILE} | bc ) || exit 1
+#	    SIZE_OUT_EXACT=$( echo 4*${XDEF}*${YDEF}*1*${TDEF_FILE} | bc ) || exit 1
 	    if [   ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} -a "${OVERWRITE}" != "yes" \
 		-a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
 		continue 1
@@ -226,7 +216,12 @@ EOF
 t = ${TMIN}
 while( t <= ${TMAX} )
   prex( 'set t 't )
-  'd ${GRADS_VAR}'
+  z = 1
+  while( z <= ${ZDEF} )
+    prex( '  set z 'z )
+    'd ${GRADS_VAR}'
+    z = z + 1
+endwhile
   t = t + 1
 endwhile
 'quit'
