@@ -17,12 +17,16 @@ TGRID_LIST=( tstep monthly_mean )
 #----- VAR
 VARS=(
     sa_lwd_sfc
+    sa_lwd_sfc_c
     sa_lwu_sfc
+    sa_lwu_sfc_c
     sa_lwd_toa
     sa_lwu_toa
     sa_lwu_toa_c
     sa_swd_sfc
+    sa_swd_sfc_c
     sa_swu_sfc
+    sa_swu_sfc_c
     sa_swd_toa
     sa_swu_toa
     sa_swu_toa_c
