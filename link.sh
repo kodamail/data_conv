@@ -55,6 +55,7 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	VAR_ORG=${VAR_LIST[$j]}
 	VAR=${VAR_ORG}
 	INPUT_CTL=${INPUT_CTL_LIST[$j]}
+	INPUT_DIR_CTL_CHILD=${INPUT_CTL%/*}
 	echo "  ${VAR_ORG}"
         #
         # detrmine type of the variable
@@ -78,14 +79,9 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    echo "skip!"
 	    continue
 	fi
-	INPUT_DIR_CTL_CHILD=${INPUT_CTL%/*}
-	INPUT_DATA_TEMPLATE=$( grep ^DSET ${INPUT_CTL} | sed -e "s|^DSET *^||i" ) || exit 1
-	INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
-	INPUT_DATA_TEMPLATE_HEAD=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
-	INPUT_DATA_TEMPLATE_TAIL=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
 	#
 	# dimension
-	CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
+	FLAG_CHSUB=$( grep -l "^CHSUB" ${INPUT_CTL} ) || exit 1
         DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
 	XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
 	[[ "${ZDEF}" = "0" ]] && ZDEF=1
@@ -97,8 +93,13 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    PERIOD="monthly_mean"
 	else
 	    TDEF_INCRE_MN=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit MN | sed -e "s|MN$||" ) || exit 1
-	    TDEF_INCRE_HR=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit HR | sed -e "s|HR$||" ) || exit 1
-	    TDEF_INCRE_DY=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit DY | sed -e "s|DY$||" ) || exit 1
+#	    TDEF_INCRE_HR=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit HR | sed -e "s|HR$||" ) || exit 1
+#	    TDEF_INCRE_DY=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit DY | sed -e "s|DY$||" ) || exit 1
+#	    echo "${TDEF_INCRE_MN} ${TDEF_INCRE_HR} ${TDEF_INCRE_DY}"
+	    let TDEF_INCRE_HR=TDEF_INCRE_MN/60
+	    let TDEF_INCRE_DY=TDEF_INCRE_HR/24
+#	    echo "${TDEF_INCRE_MN} ${TDEF_INCRE_HR} ${TDEF_INCRE_DY}"
+
 	    if [[ ${TDEF_INCRE_MN} -lt 60 ]] ; then
 		PERIOD="${TDEF_INCRE_MN}mn"
 	    elif [[ ${TDEF_INCRE_HR} -lt 24 ]] ; then
@@ -134,17 +135,28 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 	    ln -s ../${PERIOD}/${VAR} ${OUTPUT_DIR2}
 	fi
 
-	if [[ ${#CHSUB_LIST[@]} -gt 0 ]] ; then
+#	if [[ ${#CHSUB_LIST[@]} -gt 0 ]] ; then
+	if [[ "${FLAG_CHSUB}" != "" ]] ; then
 	    OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
 	    sed ${INPUT_CTL} -e "s|^DSET .*$|DSET ^%ch/${VAR}.${EXT}|i" \
-		> ${OUTPUT_CTL} || exit 1
+		> ${OUTPUT_CTL}.new || exit 1
 	    if [[ "${VAR}" != "${VAR_ORG}" ]] ; then
-		echo "VARS 1"             >> ${OUTPUT_CTL}
-		echo "${VAR_ORG}=>${VAR}" >> ${OUTPUT_CTL}
-		echo "ENDVARS"            >> ${OUTPUT_CTL}
+		echo "VARS 1"             >> ${OUTPUT_CTL}.new
+		echo "${VAR_ORG}=>${VAR}" >> ${OUTPUT_CTL}.new
+		echo "ENDVARS"            >> ${OUTPUT_CTL}.new
 	    fi
+	    if [[ -f ${OUTPUT_CTL} ]] ; then
+		FLAG=$( diff ${OUTPUT_CTL}.new ${OUTPUT_CTL} ) || exit 1
+		[[ "${FLAG}" = "" ]] && { rm ${OUTPUT_CTL}.new ; continue ; }  # nothing to do!
+	    fi
+
 	    # assuming that CHSUBs are same directory structure with each other.
+	    INPUT_DATA_TEMPLATE=$( grep ^DSET ${INPUT_CTL} | sed -e "s|^DSET *^||i" ) || exit 1
+	    INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
+	    INPUT_DATA_TEMPLATE_HEAD=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
+	    INPUT_DATA_TEMPLATE_TAIL=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
 	    OUTPUT_DATA_TEMPLATE=""
+	    CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
 	    for CHSUB in ${CHSUB_LIST[@]} ; do
 		if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} && ! -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
 		    rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}  # symbolic link is broken
@@ -174,6 +186,8 @@ for(( i=0; $i<${#INPUT_RDIR_CTL_LIST[@]}; i=$i+1 )) ; do
 
 		ln -s ${OUTPUT_DATA_TEMPLATE_HEAD}${CHSUB}${OUTPUT_DATA_TEMPLATE_TAIL} ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} || exit 1
 	    done
+	    mv ${OUTPUT_CTL}.new ${OUTPUT_CTL} || exit 1
+
 	else
 	    # just link all files/dirs
 	    LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
