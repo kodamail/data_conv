@@ -42,6 +42,11 @@ NOTHING=1
 #============================================================#
 for VAR in ${VAR_LIST[@]} ; do
     #
+    # SA
+    #   s: snapshot  a: average
+    #
+    [ "${SA}" = "" ] && SA=${VAR:1:1}
+    #
     #----- check whether output dir is write-protected
     #
     if [ -f "${INPUT_DIR}/${VAR}/_locked" ] ; then
@@ -49,21 +54,21 @@ for VAR in ${VAR_LIST[@]} ; do
 	continue
     fi
     case "${VAR}" in
-	"ss_ws10m")
+	"s${SA}_ws10m")
 	    INPUT_CTL_LIST=( 
-		${INPUT_DIR}/ss_u10m/ss_u10m.ctl
-		${INPUT_DIR}/ss_v10m/ss_v10m.ctl
+		${INPUT_DIR}/s${SA}_u10m/s${SA}_u10m.ctl
+		${INPUT_DIR}/s${SA}_v10m/s${SA}_v10m.ctl
 		)
 #	    INPUT_VAR_REF=ss_u10m
-	    GRADS_VAR="sqrt(ss_u10m.1*ss_u10m.1+ss_v10m.2*ss_v10m.2)"
+	    GRADS_VAR="sqrt(s${SA}_u10m.1*s${SA}_u10m.1+s${SA}_v10m.2*s${SA}_v10m.2)"
 	    ;;
-	"ms_ws")
+	"m${SA}_ws")
 	    INPUT_CTL_LIST=( 
-		${INPUT_DIR}/ms_u/ms_u.ctl
-		${INPUT_DIR}/ms_v/ms_v.ctl
+		${INPUT_DIR}/m${SA}_u/m${SA}_u.ctl
+		${INPUT_DIR}/m${SA}_v/m${SA}_v.ctl
 	    )
 	    #		INPUT_VAR_REF=ms_u_p850
-	    GRADS_VAR="sqrt(ms_u.1*ms_u.1+ms_v.2*ms_v.2)"
+	    GRADS_VAR="sqrt(m${SA}_u.1*m${SA}_u.1+m${SA}_v.2*m${SA}_v.2)"
 	    ;;
     esac
     INPUT_CTL_REF=${INPUT_CTL_LIST[0]}

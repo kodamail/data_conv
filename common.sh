@@ -183,7 +183,7 @@ function expand_vars()
 	            ms_omega ms_z ms_ws )
     VARS_OL=(    $( ls ${DCONV_TOP_RDIR}/ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
     VARS_SL=(    $( ls ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) \
-	            ss_ws10m )
+	            ss_ws10m sa_ws10m )
 #    VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
     VARS_ALL=(   ${VARS_ISCCP[@]} ${VARS_LL[@]} ${VARS_ML[@]} ${VARS_OL[@]} ${VARS_SL[@]} \
 	         ${VARS_ADV[@]} )

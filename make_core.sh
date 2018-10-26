@@ -62,7 +62,7 @@ done  # loop: TGRID
 #
 VARS_ANA=()
 if (( ${FLAG_TSTEP_DERIVE} == 1 )) ; then
-    VARS_ANA=( ss_ws10m ms_ws )
+    VARS_ANA=( ss_ws10m sa_ws10m ms_ws )
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
@@ -88,6 +88,7 @@ for HGRID  in ${HGRID_LIST[@]}  ; do
 	INPUT_CTL_REF=""
 	case "${VAR}" in
 	    "ss_ws10m") [[ ! -f ${DIR_IN}/ss_u10m/ss_u10m.ctl ]] && continue ;;
+	    "sa_ws10m") [[ ! -f ${DIR_IN}/sa_u10m/sa_u10m.ctl ]] && continue ;;
 	    "ms_ws")    [[ ! -f ${DIR_IN}/ms_u/ms_u.ctl       ]] && continue ;;
 	esac
 	DIR_OUT=${DIR_IN}
