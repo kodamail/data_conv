@@ -6,9 +6,14 @@
 #
 #. ./common.sh
 #. ./usr/cnf_def.sh
-while [[ -n "$1" ]] ; do  # for all the arguments
 
-    CNFID=${1:-def}   # CNFID if any ("def" by default)
+if [[ ! -n "$1" ]] ; then
+    echo "usage: ./link.sh [ CNFID-1 | cnf-script-name-1 ] ..."
+    exit 1
+fi
+
+while [[ -n "$1" ]] ; do  # for all the arguments
+    CNFID=$1
     if [[ -f ./cnf/${CNFID}.sh ]] ; then
 	continue
     elif [[ -f ${CNFID} ]] ; then
@@ -16,7 +21,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	CNFID=${CNFID#./}
 	CNFID=${CNFID#cnf/}
     else
-	echo "usage: ./link.sh [ CNFID | cnf-script-name ]"
+	echo "error: Cannot resolve CNFID=${CNFID}"
 	exit 1
     fi
     . ./common.sh ${CNFID} || exit 1
