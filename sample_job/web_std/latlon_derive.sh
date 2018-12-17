@@ -17,6 +17,8 @@ TGRID_LIST=( tstep monthly_mean )
 #----- VAR
 VARS=(
     ss_ws10m
+    sa_t2m_max
+    sa_t2m_min
     )
 
 #----- Analysis flag

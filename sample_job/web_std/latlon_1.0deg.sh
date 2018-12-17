@@ -1,7 +1,7 @@
 #!/bin/sh
 # for standard analysis and web archive
 #
-#- comparison with GPCP/CMAP/SRB3.0
+#- comparison with GPCP/CMAP/CERES
 #
 # Do not edit below two lines: Load common.sh if it exists in the same directory
 DIR_SCRIPT=$( cd $( dirname ${BASH_SOURCE:-$0} ); pwd )  # abs. path to common.sh

@@ -30,9 +30,11 @@ VARS=(
     ms_w
     ms_rh
     ms_qv
+    ms_z
     )
 
 #----- Analysis flag
 FLAG_TSTEP_Z2PRE=1
+FLAG_TSTEP_PLEVZ=1
 #FLAG_TSTEP_ZM=1
 

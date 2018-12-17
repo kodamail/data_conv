@@ -27,6 +27,7 @@ VARS=(
     ms_w
     ms_rh
     ms_qv
+    ms_z
     )
 
 #----- Analysis flag
