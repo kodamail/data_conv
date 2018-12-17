@@ -153,7 +153,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		    FLAG=$( diff ${OUTPUT_CTL}.new ${OUTPUT_CTL} )
 		    [[ "${FLAG}" = "" ]] && { rm ${OUTPUT_CTL}.new ; continue ; }  # nothing to do!
 		fi
-		
+
 		# assuming that CHSUBs are same directory structure with each other.
 		INPUT_DATA_TEMPLATE=$( grep ^DSET ${INPUT_CTL} | sed -e "s|^DSET *^||i" ) || exit 1
 		INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
@@ -177,17 +177,18 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 			break
 		    fi
 		    mkdir -p ${OUTPUT_DIR}/${CHSUB}
-		    
+
 		    # just for once
 		    if [[ "${OUTPUT_DATA_TEMPLATE}" == "" ]] ; then
 			INPUT_DIR_DATA=${INPUT_DATA%/*}
 			DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
 			DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}/|%ch/|g" )
+			DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}$|%ch|g" )
 			OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR_ORG}.${EXT}
 			OUTPUT_DATA_TEMPLATE_HEAD=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
 			OUTPUT_DATA_TEMPLATE_TAIL=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
 		    fi
-		    
+
 		    ln -s ${OUTPUT_DATA_TEMPLATE_HEAD}${CHSUB}${OUTPUT_DATA_TEMPLATE_TAIL} ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} || exit 1
 		done
 		mv ${OUTPUT_CTL}.new ${OUTPUT_CTL} || exit 1
@@ -208,7 +209,8 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		fi
 	    fi
 	done
-    done
+    done # loop: i <- ${INPUT_RDIR_CTL_LIST[@]}
+
     
     if [[ ${#CHSUB_BREAK_LIST[*]} -gt 0 ]] ; then
 	IFS=$'\n'
