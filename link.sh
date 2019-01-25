@@ -15,7 +15,7 @@ fi
 while [[ -n "$1" ]] ; do  # for all the arguments
     CNFID=$1
     if [[ -f ./cnf/${CNFID}.sh ]] ; then
-	continue
+	:
     elif [[ -f ${CNFID} ]] ; then
 	CNFID=${CNFID%.sh}
 	CNFID=${CNFID#./}
