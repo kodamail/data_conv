@@ -330,6 +330,10 @@ EOF
 		cat > temp.gs <<EOF
 'reinit'
 rc = gsfallow( 'on' )
+* dummy, for dealing with GrADS bug
+'xopen ../${INPUT_DIR}/${VAR}/${YMD:0:4}/${YMD}.000000-${YMDPP}.000000/${VAR}.nc'
+'reinit'
+
 'xopen ../${INPUT_CTL}'
 'set gxout fwrite'
 'set fwrite -be temp.grd'
