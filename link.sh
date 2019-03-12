@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # create link for NICAM data
 #
 # Before execution, check
@@ -8,15 +8,13 @@
 #. ./usr/cnf_def.sh
 
 if [[ ! -n "$1" ]] ; then
-    echo "usage: ./link.sh [ CNFID-1 | cnf-script-name-1 ] ..."
+    echo "usage: ./link.sh cnf-file-name-1 ..."
     exit 1
 fi
 
 while [[ -n "$1" ]] ; do  # for all the arguments
     CNFID=$1
-    if [[ -f ./cnf/${CNFID}.sh ]] ; then
-	:
-    elif [[ -f ${CNFID} ]] ; then
+    if [[ -f ${CNFID} ]] ; then
 	CNFID=${CNFID%.sh}
 	CNFID=${CNFID#./}
 	CNFID=${CNFID#cnf/}
@@ -44,7 +42,11 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl   2> /dev/null ) )
 	fi
 	for TMP in ${TMP_LIST[@]} ; do
-	    VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
+	    if [[ ${VDEF_PER_FILE} == 1 ]] ; then
+		VDEF=1
+	    else
+		VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
+	    fi
 	    if [[ ${VDEF} = 1 ]] ; then
 		INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
 		VAR_LIST[${#VAR_LIST[@]}]=$( echo "${TMP}" | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) || exit 1
@@ -56,7 +58,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		done
 	    fi
 	done
-	
+
 	for(( j=0; $j<${#VAR_LIST[@]}; j=$j+1 )) ; do
 	    VAR_ORG=${VAR_LIST[$j]}
 	    VAR=${VAR_ORG}
@@ -86,14 +88,29 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    fi
 	    #
 	    # dimension
-	    FLAG_CHSUB=$( grep -l "^CHSUB" ${INPUT_CTL} ) || exit 1
+	    FLAG_CHSUB=$( grep -l "^CHSUB" ${INPUT_CTL} )
             DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
 	    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
+	    XDEF5=$( printf "%05d" ${XDEF} )
+	    YDEF5=$( printf "%05d" ${YDEF} )
 	    [[ "${ZDEF}" = "0" ]] && ZDEF=1
+
 	    PLEV=""
 	    if [[ ${ZDEF} == 1 && "${TAG}" == "ml_plev" ]] ; then
 		PLEV=( $( grads_ctl.pl ${INPUT_CTL} ZDEF 1 ) ) || exit 1
 	    fi
+
+	    PLEV_STR=""
+
+	    if [[ ${ZDEF} -le 5 && "${TAG}" == "ml_plev" ]] ; then
+		PLEV_STR="p"
+		for(( P=1; ${P}<=${ZDEF}; P=${P}+1 )) ; do
+		    PLEV=( $( grads_ctl.pl ${INPUT_CTL} ZDEF ${P} ) ) || exit 1
+		    [[ "${PLEV_STR}" != "p" ]] && PLEV_STR=${PLEV_STR}+
+		    PLEV_STR="${PLEV_STR}${PLEV}"
+		done
+	    fi
+
 	    if [[ "${INPUT_TIME}" = "monthly_mean" ]] ; then
 		PERIOD="monthly_mean"
 	    else
@@ -121,13 +138,13 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		    exit 1
 		fi
 	    fi
-	    
-	    if [[ "${PLEV}" != "" ]] ; then
-		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}_p${PLEV}/${PERIOD}/${VAR}
+#	    if [[ "${PLEV}" != "" ]] ; then
+	    if [[ "${PLEV_STR}" != "" ]] ; then
+		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF5}x${YDEF5}_${PLEV_STR}/${PERIOD}/${VAR}
 	    elif [[ "${ZDEF}" = "1" || "${TAG}" = "ll" ]] ; then
-		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}/${PERIOD}/${VAR}
+		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF5}x${YDEF5}/${PERIOD}/${VAR}
 	    else
-		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF}x${YDEF}x${ZDEF}/${PERIOD}/${VAR}
+		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF5}x${YDEF5}x${ZDEF}/${PERIOD}/${VAR}
 	    fi
 	    mkdir -p ${OUTPUT_DIR}
 	    touch ${OUTPUT_DIR}/_locked    # raw data flag
@@ -138,7 +155,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		rm -f ${OUTPUT_DIR2}
 		ln -s ../${PERIOD}/${VAR} ${OUTPUT_DIR2}
 	    fi
-	    
+
 	    #if [[ ${#CHSUB_LIST[@]} -gt 0 ]] ; then
 	    if [[ "${FLAG_CHSUB}" != "" ]] ; then
 		OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
