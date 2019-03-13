@@ -22,7 +22,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	echo "error: Cannot resolve CNFID=${CNFID}"
 	exit 1
     fi
-    . ./common.sh ${CNFID} || exit 1
+    source ./common.sh ${CNFID} || exit 1
 
     #----------------------------------------#
     CHSUB_BREAK_LIST=()
@@ -47,6 +47,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    else
 		VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
 	    fi
+
 	    if [[ ${VDEF} = 1 ]] ; then
 		INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
 		VAR_LIST[${#VAR_LIST[@]}]=$( echo "${TMP}" | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) || exit 1
@@ -64,6 +65,12 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    VAR=${VAR_ORG}
 	    INPUT_CTL=${INPUT_CTL_LIST[$j]}
 	    INPUT_DIR_CTL_CHILD=${INPUT_CTL%/*}
+	    #
+	    FLAG_CHSUB=$( grep -l "^CHSUB" ${INPUT_CTL} )
+	    INPUT_CTL_META=${INPUT_CTL}
+	    [[ -f ${INPUT_CTL%.ctl}_meta.ctl ]] && INPUT_CTL_META=${INPUT_CTL%.ctl}_meta.ctl
+	    [[ -f ${INPUT_CTL%/*}/meta/${INPUT_CTL##*/} ]] && INPUT_CTL_META=${INPUT_CTL%/*}/meta/${INPUT_CTL##*/}
+	    #
 	    echo "  ${VAR_ORG}"
             #
             # detrmine type of the variable
@@ -88,8 +95,8 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    fi
 	    #
 	    # dimension
-	    FLAG_CHSUB=$( grep -l "^CHSUB" ${INPUT_CTL} )
-            DIMS=( $( grads_ctl.pl ${INPUT_CTL} DIMS NUM ) ) || exit 1
+
+            DIMS=( $( grads_ctl.pl ${INPUT_CTL_META} DIMS NUM ) ) || exit 1
 	    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
 	    XDEF5=$( printf "%05d" ${XDEF} )
 	    YDEF5=$( printf "%05d" ${YDEF} )
@@ -97,7 +104,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 
 	    PLEV=""
 	    if [[ ${ZDEF} == 1 && "${TAG}" == "ml_plev" ]] ; then
-		PLEV=( $( grads_ctl.pl ${INPUT_CTL} ZDEF 1 ) ) || exit 1
+		PLEV=( $( grads_ctl.pl ${INPUT_CTL_META} ZDEF 1 ) ) || exit 1
 	    fi
 
 	    PLEV_STR=""
@@ -105,7 +112,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    if [[ ${ZDEF} -le 5 && "${TAG}" == "ml_plev" ]] ; then
 		PLEV_STR="p"
 		for(( P=1; ${P}<=${ZDEF}; P=${P}+1 )) ; do
-		    PLEV=( $( grads_ctl.pl ${INPUT_CTL} ZDEF ${P} ) ) || exit 1
+		    PLEV=( $( grads_ctl.pl ${INPUT_CTL_META} ZDEF ${P} ) ) || exit 1
 		    [[ "${PLEV_STR}" != "p" ]] && PLEV_STR=${PLEV_STR}+
 		    PLEV_STR="${PLEV_STR}${PLEV}"
 		done
@@ -114,7 +121,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    if [[ "${INPUT_TIME}" = "monthly_mean" ]] ; then
 		PERIOD="monthly_mean"
 	    else
-		TDEF_INCRE_MN=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit MN | sed -e "s|MN$||" ) || exit 1
+		TDEF_INCRE_MN=$( grads_ctl.pl ${INPUT_CTL_META} TDEF INC --unit MN | sed -e "s|MN$||" ) || exit 1
 		#TDEF_INCRE_HR=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit HR | sed -e "s|HR$||" ) || exit 1
 		#TDEF_INCRE_DY=$( grads_ctl.pl ${INPUT_CTL} TDEF INC --unit DY | sed -e "s|DY$||" ) || exit 1
 		#echo "${TDEF_INCRE_MN} ${TDEF_INCRE_HR} ${TDEF_INCRE_DY}"
@@ -159,71 +166,107 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    #if [[ ${#CHSUB_LIST[@]} -gt 0 ]] ; then
 	    if [[ "${FLAG_CHSUB}" != "" ]] ; then
 		OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
-		sed ${INPUT_CTL} -e "s|^DSET .*$|DSET ^%ch/${VAR}.${EXT}|i" \
+#		sed ${INPUT_CTL} -e "s|^DSET .*$|DSET ^%ch/${VAR}.${EXT}|i" \
+#		    > ${OUTPUT_CTL}.new || exit 1
+#		sed ${INPUT_CTL} -e "s|%ch|../../../data_1st/output/%ch|i" \
+#		    > ${OUTPUT_CTL}.new || exit 1
+#		sed ${INPUT_CTL} -e "s|^DSET ^\(.*\)%ch|DSET ^\1../../../data_1st/output/%ch|i" \
+#		    > ${OUTPUT_CTL}.new || exit 1
+
+
+#		set -x
+#		diff-path ${OUTPUT_DIR} ${INPUT_CTL%/*}/../..
+		DIFF=$( diff-path ${OUTPUT_DIR} ${INPUT_CTL%/*} )
+#		echo ${DIFF}
+
+		sed ${INPUT_CTL} -e "s|^DSET ^\(.*\)|DSET ^${DIFF}/\1|i" \
 		    > ${OUTPUT_CTL}.new || exit 1
+
+
 		if [[ "${VAR}" != "${VAR_ORG}" ]] ; then
 		    echo "VARS 1"             >> ${OUTPUT_CTL}.new
 		    echo "${VAR_ORG}=>${VAR}" >> ${OUTPUT_CTL}.new
 		    echo "ENDVARS"            >> ${OUTPUT_CTL}.new
 		fi
-		if [[ -f ${OUTPUT_CTL} ]] ; then
-		    FLAG=$( diff ${OUTPUT_CTL}.new ${OUTPUT_CTL} )
-		    [[ "${FLAG}" = "" ]] && { rm ${OUTPUT_CTL}.new ; continue ; }  # nothing to do!
-		fi
+#		if [[ -f ${OUTPUT_CTL} ]] ; then
+#		    FLAG=$( diff ${OUTPUT_CTL}.new ${OUTPUT_CTL} )
+#		    [[ "${FLAG}" = "" ]] && { rm ${OUTPUT_CTL}.new ; continue ; }  # nothing to do!
+#		fi
 
-		# assuming that CHSUBs are same directory structure with each other.
-		INPUT_DATA_TEMPLATE=$( grep ^DSET ${INPUT_CTL} | sed -e "s|^DSET *^||i" ) || exit 1
-		INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
-		INPUT_DATA_TEMPLATE_HEAD=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
-		INPUT_DATA_TEMPLATE_TAIL=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
-		OUTPUT_DATA_TEMPLATE=""
-		CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
-		for CHSUB in ${CHSUB_LIST[@]} ; do
-		    if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} && ! -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
-			rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}  # symbolic link is broken
-		    fi
-		    if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
-#		        [[ ${USE_OLD} -eq 1 ]] && continue
-			[[ ${USE_OLD} -eq 1 && -e ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] && continue
-			rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}
-		    fi
-		    INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB}${INPUT_DATA_TEMPLATE_TAIL}
-		    if [[ ! -f ${INPUT_DATA} ]] ; then
-			echo "    info: break at ${CHSUB}."
-			CHSUB_BREAK_LIST=( ${CHSUB_BREAK_LIST[@]} ${CHSUB} )
-			break
-		    fi
-		    mkdir -p ${OUTPUT_DIR}/${CHSUB}
+#		# assuming that CHSUBs are same directory structure with each other.
+#		INPUT_DATA_TEMPLATE=$( grep ^DSET ${INPUT_CTL} | sed -e "s|^DSET *^||i" ) || exit 1
+#		INPUT_DATA_TEMPLATE=${INPUT_DIR_CTL_CHILD}/${INPUT_DATA_TEMPLATE}
+#		INPUT_DATA_TEMPLATE_HEAD=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
+#		INPUT_DATA_TEMPLATE_TAIL=$( echo "${INPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
+#		OUTPUT_DATA_TEMPLATE=""
+#		CHSUB_LIST=( $( grep "^CHSUB" ${INPUT_CTL} | awk '{ print $4 }' ) ) || exit 1
+#		for CHSUB in ${CHSUB_LIST[@]} ; do
+#		    if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} && ! -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
+#			rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}  # symbolic link is broken
+#		    fi
+#		    if [[ -L ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] ; then
+##		        [[ ${USE_OLD} -eq 1 ]] && continue
+#			[[ ${USE_OLD} -eq 1 && -e ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} ]] && continue
+#			rm -f ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT}
+#		    fi
+#		    INPUT_DATA=${INPUT_DATA_TEMPLATE_HEAD}${CHSUB}${INPUT_DATA_TEMPLATE_TAIL}
+#		    if [[ ! -f ${INPUT_DATA} ]] ; then
+#			echo "    info: break at ${CHSUB}."
+#			CHSUB_BREAK_LIST=( ${CHSUB_BREAK_LIST[@]} ${CHSUB} )
+#			break
+#		    fi
+#		    mkdir -p ${OUTPUT_DIR}/${CHSUB}
+#
+#		    # just for once
+#		    if [[ "${OUTPUT_DATA_TEMPLATE}" == "" ]] ; then
+#			INPUT_DIR_DATA=${INPUT_DATA%/*}
+#			DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
+#			DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}/|%ch/|g" )
+#			DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}$|%ch|g" )
+#			OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR_ORG}.${EXT}
+#			OUTPUT_DATA_TEMPLATE_HEAD=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
+#			OUTPUT_DATA_TEMPLATE_TAIL=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
+#		    fi
+#
+#		    ln -s ${OUTPUT_DATA_TEMPLATE_HEAD}${CHSUB}${OUTPUT_DATA_TEMPLATE_TAIL} ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} || exit 1
+#		done
 
-		    # just for once
-		    if [[ "${OUTPUT_DATA_TEMPLATE}" == "" ]] ; then
-			INPUT_DIR_DATA=${INPUT_DATA%/*}
-			DIFF_DIR=$( diff-path ${OUTPUT_DIR}/${CHSUB} ${INPUT_DIR_DATA} ) || exit 1
-			DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}/|%ch/|g" )
-			DIFF_DIR=$( echo ${DIFF_DIR} | sed -e "s|${CHSUB}$|%ch|g" )
-			OUTPUT_DATA_TEMPLATE=${DIFF_DIR}/${VAR_ORG}.${EXT}
-			OUTPUT_DATA_TEMPLATE_HEAD=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|%ch.*$||" )
-			OUTPUT_DATA_TEMPLATE_TAIL=$( echo "${OUTPUT_DATA_TEMPLATE}" | sed -e "s|^.*%ch||" )
-		    fi
-
-		    ln -s ${OUTPUT_DATA_TEMPLATE_HEAD}${CHSUB}${OUTPUT_DATA_TEMPLATE_TAIL} ${OUTPUT_DIR}/${CHSUB}/${VAR}.${EXT} || exit 1
-		done
 		mv ${OUTPUT_CTL}.new ${OUTPUT_CTL} || exit 1
+
+		# dummy control file for obtaining metadata
+		sed ${OUTPUT_CTL} -e "/^CHSUB/d" > ${OUTPUT_CTL%.ctl}_meta.ctl
+		cat ${OUTPUT_CTL} | grep ^CHSUB | head -n 1 >> ${OUTPUT_CTL%.ctl}_meta.ctl
 		
 	    else
-		# just link all files/dirs
-		LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
-		FILE_LIST=$( ls ${INPUT_DIR_CTL_CHILD} )
-		FLAG=0
-		for FILE in ${FILE_LIST[@]} ; do
-		    rm -f ${OUTPUT_DIR}/${FILE}
-		    ln -s ${LINK_DIR}/${FILE} ${OUTPUT_DIR}/${FILE}
-		    [[ "${FILE}" == "${VAR}.ctl" ]] && FLAG=1
-		done
-		if [[ ${FLAG} -eq 0 ]] ; then
-		    rm -f ${OUTPUT_DIR}/${VAR}.ctl
-		    ln -s ${LINK_DIR}/${INPUT_CTL##*/} ${OUTPUT_DIR}/${VAR}.ctl
+		# just link top directory
+		OUTPUT_CTL=${OUTPUT_DIR}/${VAR}.ctl
+		sed ${INPUT_DIR_CTL_CHILD}/${VAR_ORG}.ctl -e "s|^DSET ^|DSET ^grd/|" > ${OUTPUT_CTL}.new
+		if [[ "${VAR}" != "${VAR_ORG}" ]] ; then
+		    echo "VARS 1"             >> ${OUTPUT_CTL}.new
+		    echo "${VAR_ORG}=>${VAR}" >> ${OUTPUT_CTL}.new
+		    echo "ENDVARS"            >> ${OUTPUT_CTL}.new
 		fi
+		mv ${OUTPUT_CTL}.new ${OUTPUT_CTL} || exit 1
+
+		if [[ ! -e ${OUTPUT_DIR}/grd ]] ; then
+		    LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
+		    ln -s ${LINK_DIR} ${OUTPUT_DIR}/grd
+		fi
+
+#		# just link all files/dirs
+#		LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
+#		FILE_LIST=$( ls ${INPUT_DIR_CTL_CHILD} )
+#		FLAG=0
+#		for FILE in ${FILE_LIST[@]} ; do
+#		    rm -f ${OUTPUT_DIR}/${FILE}
+#		    ln -s ${LINK_DIR}/${FILE} ${OUTPUT_DIR}/${FILE}
+#		    [[ "${FILE}" == "${VAR}.ctl" ]] && FLAG=1
+#		done
+#		if [[ ${FLAG} -eq 0 ]] ; then
+#		    rm -f ${OUTPUT_DIR}/${VAR}.ctl
+#		    ln -s ${LINK_DIR}/${INPUT_CTL##*/} ${OUTPUT_DIR}/${VAR}.ctl
+#		fi
+
 	    fi
 	done
     done # loop: i <- ${INPUT_RDIR_CTL_LIST[@]}
