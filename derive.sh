@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # derive variables
 #
@@ -14,20 +14,20 @@ TARGET_VAR=$7
 set +x
 echo "##########"
 
-. ./common.sh ${CNFID} || exit 1
+source ./common.sh ${CNFID} || exit 1
 
 create_temp || exit 1
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}
 trap "finish" 0
 
-if [   "${OVERWRITE}" != ""                                 \
-    -a "${OVERWRITE}" != "yes"    -a "${OVERWRITE}" != "no" \
-    -a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
+if [[   "${OVERWRITE}" != ""                                 \
+     && "${OVERWRITE}" != "yes"    && "${OVERWRITE}" != "no" \
+     && "${OVERWRITE}" != "dry-rm" && "${OVERWRITE}" != "rm" ]] ; then
     echo "error: OVERWRITE = ${OVERWRITE} is not supported yet." >&2
     exit 1
 fi
 
-if [ "${TARGET_VAR}" = "" ] ; then
+if [[ "${TARGET_VAR}" = "" ]] ; then
     echo "error: VAR is not set." >&2
     exit 1
 fi
@@ -45,11 +45,11 @@ for VAR in ${VAR_LIST[@]} ; do
     # SA
     #   s: snapshot  a: average
     #
-    [ "${SA}" = "" ] && SA=${VAR:1:1}
+    [[ "${SA}" = "" ]] && SA=${VAR:1:1}
     #
     #----- check whether output dir is write-protected
     #
-    if [ -f "${INPUT_DIR}/${VAR}/_locked" ] ; then
+    if [[ -f "${INPUT_DIR}/${VAR}/_locked" ]] ; then
 	echo "info: ${INPUT_DIR} is locked."
 	continue
     fi
@@ -74,7 +74,7 @@ for VAR in ${VAR_LIST[@]} ; do
     INPUT_CTL_REF=${INPUT_CTL_LIST[0]}
 
     for INPUT_CTL in ${INPUT_CTL_LIST[@]} ; do
-	if [ ! -f "${INPUT_CTL}" ] ; then
+	if [[ ! -f "${INPUT_CTL}" ]] ; then
 	    echo "warning: ${INPUT_CTL} does not exist."
 	    continue 2
 	fi
@@ -83,9 +83,9 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of output data
     #
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+    if [[ -f "${OUTPUT_CTL}" && "${OVERWRITE}" != "rm" && "${OVERWRITE}" != "dry-rm" ]] ; then
         FLAG=( $( grads_exist_data.sh ${OUTPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-        if [ "${FLAG[0]}" = "ok" ] ; then
+        if [[ "${FLAG[0]}" = "ok" ]] ; then
             echo "info: Output data already exist."
             continue
         fi
@@ -110,12 +110,12 @@ for VAR in ${VAR_LIST[@]} ; do
     #----- check existence of input data
     #
     for INPUT_CTL in ${INPUT_CTL_LIST[@]} ; do
-	if [ "${START_HMS}" != "000000" ] ; then
+	if [[ "${START_HMS}" != "000000" ]] ; then
 	    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
 	else
 	    FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
 	fi
-	if [ "${FLAG[0]}" != "ok" ] ; then
+	if [[ "${FLAG[0]}" != "ok" ]] ; then
 	    echo "warning: All or part of data does not exist (CTL=${INPUT_CTL})."
 	    continue 2
 	fi
@@ -125,7 +125,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
     mkdir -p ${OUTPUT_DIR}/${VAR}/log || exit 1
-    if [ "${START_HMS}" != "000000" ] ; then
+    if [[ "${START_HMS}" != "000000" ]] ; then
 	DSET="DSET ^%ch/${VAR}.grd"
     else
 	DSET="DSET ^%y4/${VAR}_%y4%m2%d2.grd"
@@ -149,15 +149,15 @@ EOF
 	#
 	#----- set/proceed date -----#
 	#
-	if [ ${d} -eq 1 ] ; then
+	if [[ ${d} -eq 1 ]] ; then
 	    DATE=$( date -u --date "${TDEF_START}" +%Y%m%d\ %H:%M:%S ) || exit 1
 	else
 	    DATE=$( date -u --date "${DATE} ${TDEF_SEC_FILE} seconds" +%Y%m%d\ %H:%M:%S ) || exit 1
 	fi
 	YMD=${DATE:0:8}
 	#
-	[ ${YMD} -lt ${START_YMD} ] && continue
-	[ ${YMD} -ge ${ENDPP_YMD} ] && break
+	[[ ${YMD} -lt ${START_YMD} ]] && continue
+	[[ ${YMD} -ge ${ENDPP_YMD} ]] && break
 	#
 	YMDPP=$( date -u --date "${YMD} 1 day" +%Y%m%d ) || exit 1
 	YEAR=${DATE:0:4} ; MONTH=${DATE:4:2} ; DAY=${DATE:6:2}
@@ -167,7 +167,7 @@ EOF
         # File name convention
         #   2004/ms_tem_20040601.grd  (center of the date if incre > 1dy)
 	#
-        if [ "${START_HMS}" != "000000" ] ; then
+        if [[ "${START_HMS}" != "000000" ]] ; then
 	    OUTPUT_DATA=${OUTPUT_DIR}/${VAR}/${YEAR}/${YMD}.000000-${YMDPP}.000000/${VAR}.grd
 	else
 	    OUTPUT_DATA=${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.grd
@@ -177,26 +177,26 @@ EOF
 	#
         #----- output file exist?
 	#
-	if [ -f "${OUTPUT_DATA}" ] ; then
+	if [[ -f "${OUTPUT_DATA}" ]] ; then
 	    SIZE_OUT=$( ls -lL ${OUTPUT_DATA} | awk '{ print $5 }' ) || exit 1
 	    SIZE_OUT_EXACT=$( echo 4*${XDEF}*${YDEF}*${ZDEF}*${TDEF_FILE} | bc ) || exit 1
 #	    SIZE_OUT_EXACT=$( echo 4*${XDEF}*${YDEF}*1*${TDEF_FILE} | bc ) || exit 1
-	    if [   ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} -a "${OVERWRITE}" != "yes" \
-		-a "${OVERWRITE}" != "dry-rm" -a "${OVERWRITE}" != "rm" ] ; then
+	    if [[   ${SIZE_OUT} -eq ${SIZE_OUT_EXACT} && "${OVERWRITE}" != "yes" \
+		&& "${OVERWRITE}" != "dry-rm" && "${OVERWRITE}" != "rm" ]] ; then
 		continue 1
 	    fi
 	    echo "Removing ${OUTPUT_DATA}."
 	    echo ""
-	    [ "${OVERWRITE}" = "dry-rm" ] && continue 1
+	    [[ "${OVERWRITE}" = "dry-rm" ]] && continue 1
 	    rm -f ${OUTPUT_DATA}
 	fi
-	[ "${OVERWRITE}" = "rm" -o "${OVERWRITE}" = "dry-rm" ] && exit
+	[[ "${OVERWRITE}" = "rm" || "${OVERWRITE}" = "dry-rm" ]] && exit
 	echo "YMD=${YMD}"
 	#
 	# derive
 	#
 	NOTHING=0
-        if [ "${START_HMS}" != "000000" ] ; then
+        if [[ "${START_HMS}" != "000000" ]] ; then
             TMIN=$( grads_time2t.sh ${INPUT_CTL} ${YMD}   -gt ) || exit 1
             TMAX=$( grads_time2t.sh ${INPUT_CTL} ${YMDPP} -le ) || exit 1
         else
@@ -240,6 +240,6 @@ EOF
 
 done  # variable loop
 
-[ ${NOTHING} -eq 1 ] && echo "info: Nothing to do."
+[[ ${NOTHING} -eq 1 ]] && echo "info: Nothing to do."
 echo "$0 normally finished."
 echo

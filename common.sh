@@ -15,6 +15,8 @@ BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 
+BIN_CDO=/home/kodama/bin/cdo
+
 INPUT_TOP_RDIR=NOT_SPECIFIED
 DCONV_TOP_RDIR=NOT_SPECIFIED
 
@@ -38,6 +40,8 @@ FLAG_TSTEP_ISCCP3CAT=0
 FLAG_TSTEP_ZM=0
 FLAG_MM_ZM=0
 
+FLAG_KEEP_NC=0  # NetCDF -> NetCDF
+
 OVERWRITE="no"
 VERBOSE=0
 INC_SUBVARS="yes"
@@ -50,6 +54,9 @@ else
     echo "error in common.sh: ./cnf/${CNFID}.sh does not exist."
     exit 1
 fi
+
+XDEF_NAT5=$( printf "%05d" ${XDEF_NAT} )
+YDEF_NAT5=$( printf "%05d" ${YDEF_NAT} )
 
 
 VERBOSE_OPT=""
@@ -97,6 +104,11 @@ function conv_dir()
 	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${KEY}/\1_p${VALUE}/|" )
 	done
 
+    elif [[ "${TARGET}" = "ZID" ]] ; then
+	for KEY in ${KEY_LIST[@]} ; do
+	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\)\(x[0-9][0-9]*\)*/|${KEY}/\1_${VALUE}/|" )
+	done
+
     elif [[ "${TARGET}" = "TAG" ]] ; then
 	for KEY in ${KEY_LIST[@]} ; do
 	    DIR=$( echo ${DIR} | sed -e "s|${KEY}/\([0-9][0-9]*x[0-9][0-9]*\(x[0-9][0-9]*\)\)*/|${VALUE}/\1/|" )
@@ -119,9 +131,22 @@ function conv_dir()
 }
 
 
+function pid2plevels()
+{
+    local PID=$1
+    local PDEF_LEVELS=${PID}  # default
+
+    # for CMIP6
+    [[ "${PID}" = "plev19" ]] && PDEF_LEVELS="1000,925,850,700,600,500,400,300,250,200,150,100,70,50,30,20,10,5,1"
+
+    echo ${PDEF_LEVELS}
+}
+
+
 function get_pdef()
 {
     local PDEF_LEVELS=$1
+    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS} )
 
     # NOTE: "echo" adds \n
     echo ${PDEF_LEVELS} | sed -e "s/[^,]//g" | wc | awk '{ print $3 }'
@@ -177,12 +202,12 @@ function expand_vars()
 #	ms_omega ms_z )
 #    VARS_OL=(    $( ls ../../ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
 #    VARS_SL=(    $( ls ../../sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_ISCCP=( $( ls ${DCONV_TOP_RDIR}/isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
-    VARS_LL=(    $( ls ${DCONV_TOP_RDIR}/ll/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_ML=(    $( ls ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x*/tstep 2>/dev/null ) \
+    VARS_ISCCP=( $( ls ${DCONV_TOP_RDIR}/isccp/${XDEF_NAT5}x${YDEF_NAT5}x${ZDEF_ISCCP}/tstep 2>/dev/null) )
+    VARS_LL=(    $( ls ${DCONV_TOP_RDIR}/ll/${XDEF_NAT5}x${YDEF_NAT5}/tstep                  2>/dev/null ) )
+    VARS_ML=(    $( ls ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT5}x${YDEF_NAT5}x*/tstep 2>/dev/null ) \
 	            ms_omega ms_z ms_ws )
-    VARS_OL=(    $( ls ${DCONV_TOP_RDIR}/ol/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) )
-    VARS_SL=(    $( ls ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep                  2>/dev/null ) \
+    VARS_OL=(    $( ls ${DCONV_TOP_RDIR}/ol/${XDEF_NAT5}x${YDEF_NAT5}/tstep                  2>/dev/null ) )
+    VARS_SL=(    $( ls ${DCONV_TOP_RDIR}/sl/${XDEF_NAT5}x${YDEF_NAT5}/tstep                  2>/dev/null ) \
 	            ss_ws10m sa_ws10m )
 #    VARS_ADV=( cloud_cape cosp mim rain_from_cloud pdf_5dy pdf_monthly )
     VARS_ALL=(   ${VARS_ISCCP[@]} ${VARS_LL[@]} ${VARS_ML[@]} ${VARS_OL[@]} ${VARS_SL[@]} \
@@ -210,6 +235,15 @@ function expand_vars()
     done
     VARS_TEMP=( $( IFS=$'\n' ; echo "${VARS_TEMP[*]}" | sort | uniq ; ) )  # delete duplicate
     echo ${VARS_TEMP[@]}
+}
+
+# search for control file for light metadata if possible
+function ctl_meta()
+{
+    local CTL=$1
+    [[ -f ${CTL%.ctl}_meta.ctl ]] && CTL=${CTL%.ctl}_meta.ctl
+    [[ -f ${CTL%/*}/meta/${CTL##*/} ]] && CTL=${CTL%/*}/meta/${CTL##*/}
+    echo ${CTL}
 }
 
 # for date command (for average/snapshot)
@@ -250,6 +284,8 @@ function tstep_2_period()
     local CTL=$1
     local VAR=${CTL##*/}
     local VAR=${VAR%.ctl}
+    [[ -f ${CTL%.ctl}_meta.ctl ]] && CTL=${CTL%.ctl}_meta.ctl
+    [[ -f ${CTL%/*}/meta/${CTL##*/} ]] && CTL=${CTL%/*}/meta/${CTL##*/}
     local TDEF_INCRE_HR=$( grads_ctl.pl ${CTL} TDEF INC --unit HR | sed -e "s/HR$//" )
     local TDEF_INCRE_DY=$( grads_ctl.pl ${CTL} TDEF INC --unit DY | sed -e "s/DY$//" )
 

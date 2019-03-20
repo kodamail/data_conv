@@ -1,15 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Flexible analysis system for NICAM (and various type of) output
 #
 CNFID=$1
 JOB=$2
 
-echo "$0 started."
 export LANG=C
-date
+echo "$0 started ($(date))."
 
-. ./common.sh ${CNFID} || exit 1
+source ./common.sh ${CNFID} || exit 1
 
 #############################################################
 #
@@ -17,7 +16,7 @@ date
 #
 #############################################################
 [[ ! -f "${JOB}" ]] && { echo "error: ${JOB} does not exist." >&2 ; exit 1 ; }
-. ${JOB} || exit 1
+source ${JOB} || exit 1
 
 #############################################################
 #
@@ -43,7 +42,7 @@ VARS=( $( expand_vars ${#VARS[@]} ${VARS[@]} ) ) || exit 1
 #############################################################
 VARS_TSTEP=()
 for TGRID in ${TGRID_LIST[@]} ; do
-    if [ "${TGRID}" = "tstep" ] ; then
+    if [[ "${TGRID}" = "tstep" ]] ; then
 	VARS_TSTEP=( all )  # default variables
 	VARS_TSTEP=( $( expand_vars ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
 	VARS_TSTEP=( $( dep_var     ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} \
@@ -60,83 +59,87 @@ done  # loop: TGRID
 #
 ########## derived variables for native grid variables ##########
 #
-VARS_ANA=()
 if (( ${FLAG_TSTEP_DERIVE} == 1 )) ; then
-    VARS_ANA=( ss_ws10m sa_ws10m ms_ws )
+    VARS_ANA=()
+    VARS_ANA=( ss_ws10m sa_ws10m ms_ws ms_omega )
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
+    DIR_IN_LIST=()
+    for DIR_IN in \
+	${DCONV_TOP_RDIR}/sl/${XDEF_NAT5}x${YDEF_NAT5}/tstep              \
+	${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT5}x${YDEF_NAT5}x*/tstep       \
+	${DCONV_TOP_RDIR}/ml_zlev/${XDEF_NAT5}x${YDEF_NAT5}x${ZDEF}/tstep \
+	; do
+	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+    done
+    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
+	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	(( ${PDEF} != 1 )) && continue
+	DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT5}x${YDEF_NAT5}_p${PDEF_LEVELS}/tstep
+	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+    done
+    for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    for HGRID  in ${HGRID_LIST[@]}  ; do
+	[[ ! "${HGRID}" =~ ^${XDEF_NAT5}x${YDEF_NAT5}$ ]] && continue
+	for VAR in ${VARS_ANA[@]} ; do
+	    INPUT_CTL_REF=""
+	    case "${VAR}" in
+		"ss_ws10m") [[ ! -f ${DIR_IN}/ss_u10m/ss_u10m.ctl ]] && continue ;;
+		"sa_ws10m") [[ ! -f ${DIR_IN}/sa_u10m/sa_u10m.ctl ]] && continue ;;
+		"ms_ws")    [[ ! -f ${DIR_IN}/ms_u/ms_u.ctl       ]] && continue ;;
+		"ms_omega") [[ ! -f ${DIR_IN}/ms_w/ms_w.ctl       ]] && continue ;;
+		"ms_omega") [[ ! -f ${DIR_IN}/ms_tem/ms_tem.ctl   ]] && continue ;;
+	    esac
+	    DIR_OUT=${DIR_IN}
+	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
+		./derive_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${OVERWRITE} ${VAR} || exit 1
+	    else
+		./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${OVERWRITE} ${VAR} || exit 1
+	    fi
+	    [[ ! -f ${DIR_OUT}/${VAR}/${VAR}.ctl ]] && continue
+	    PERIOD=$( tstep_2_period ${DIR_OUT}/${VAR}/${VAR}.ctl ) || exit 1
+	    mkdir -p ${DIR_OUT}/../${PERIOD}
+	    if [[ ! -d ${DIR_OUT}/../${PERIOD}/${VAR} ]] ; then
+		mv ${DIR_OUT}/${VAR} ${DIR_OUT}/../${PERIOD}/ || exit 1
+		cd ${DIR_OUT} || exit 1
+		ln -s ../${PERIOD}/${VAR} || exit 1
+		cd - > /dev/null || exit 1
+	    fi
+	done  # loop: VAR
+    done  # loop: HGRID
+    done  # loop: DIR_IN
 fi
-DIR_IN_LIST=()
-for DIR_IN in \
-    ${DCONV_TOP_RDIR}/sl/${XDEF_NAT}x${YDEF_NAT}/tstep           \
-    ${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}x*/tstep    \
-    ; do
-    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-done
-for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
-    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-    [[ ${PDEF} != 1 ]] && continue
-    DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p${PDEF_LEVELS}/tstep
-#    [ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
-    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-done
-for DIR_IN in ${DIR_IN_LIST[@]} ; do
-for HGRID  in ${HGRID_LIST[@]}  ; do
-    [[ ! "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT}$ ]] && continue
-    for VAR in ${VARS_ANA[@]} ; do
-	INPUT_CTL_REF=""
-	case "${VAR}" in
-	    "ss_ws10m") [[ ! -f ${DIR_IN}/ss_u10m/ss_u10m.ctl ]] && continue ;;
-	    "sa_ws10m") [[ ! -f ${DIR_IN}/sa_u10m/sa_u10m.ctl ]] && continue ;;
-	    "ms_ws")    [[ ! -f ${DIR_IN}/ms_u/ms_u.ctl       ]] && continue ;;
-	esac
-	DIR_OUT=${DIR_IN}
-#	if [[ "${VAR}" = "ms_ws_p850" ]] ; then
-#	    DIR_OUT=$( echo "${DIR_IN}" | sed -e "s|/${XDEF_NAT}x${YDEF_NAT}x[0-9]\+/|/${XDEF_NAT}x${YDEF_NAT}_p850/|" )
-#	fi
-	./derive.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-	    ${DIR_IN} ${DIR_OUT} \
-	    ${OVERWRITE} ${VAR} || exit 1
-	[[ ! -f ${DIR_OUT}/${VAR}/${VAR}.ctl ]] && continue
-	PERIOD=$( tstep_2_period ${DIR_OUT}/${VAR}/${VAR}.ctl ) || exit 1
-	mkdir -p ${DIR_OUT}/../${PERIOD}
-	if [[ ! -d ${DIR_OUT}/../${PERIOD}/${VAR} ]] ; then
-	    mv ${DIR_OUT}/${VAR} ${DIR_OUT}/../${PERIOD}/ || exit 1
-	    cd ${DIR_OUT} || exit 1
-	    ln -s ../${PERIOD}/${VAR} || exit 1
-	    cd - > /dev/null || exit 1
-	fi
-    done  # loop: VAR
-done  # loop: HGRID
-done  # loop: DIR_IN
 #
 ########## reduce grid ##########
 #
-VARS_ANA=()
 if (( ${FLAG_TSTEP_REDUCE} == 1 )) ; then
+    VARS_ANA=()
     VARS_ANA=( all )  # default variables
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
-fi
-DIR_IN_LIST=()
-for DIR_IN in \
-    ${DCONV_TOP_RDIR}/isccp/${XDEF_NAT}x${YDEF_NAT}x${ZDEF_ISCCP}/tstep \
-    ${DCONV_TOP_RDIR}/{ll,ol,sl}/${XDEF_NAT}x${YDEF_NAT}/tstep          \
-    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT}x${YDEF_NAT}x${ZDEF}/tstep \
-    ; do
-    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-done
-for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
-    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-    [[ ${PDEF} != 1 ]] && continue
-    DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT}x${YDEF_NAT}_p${PDEF_LEVELS}/tstep
-    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-done
-for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    DIR_IN_LIST=()
+    for DIR_IN in \
+	${DCONV_TOP_RDIR}/isccp/${XDEF_NAT5}x${YDEF_NAT5}x${ZDEF_ISCCP}/tstep \
+	${DCONV_TOP_RDIR}/{ll,ol,sl}/${XDEF_NAT5}x${YDEF_NAT5}/tstep          \
+	${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${XDEF_NAT5}x${YDEF_NAT5}x${ZDEF}/tstep \
+	; do
+	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+    done
+    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
+	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	[[ ${PDEF} != 1 ]] && continue
+	DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${XDEF_NAT5}x${YDEF_NAT5}_p${PDEF_LEVELS}/tstep
+	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+    done
+    for DIR_IN in ${DIR_IN_LIST[@]} ; do
     for HGRID in ${HGRID_LIST[@]} ; do
-	[[ "${HGRID}" =~ ^${XDEF_NAT}x${YDEF_NAT} ]] && continue
+	[[ "${HGRID}" =~ ^${XDEF_NAT5}x${YDEF_NAT5} ]] && continue
 #	[[ "${HGRID}" = "${XDEF_NAT}x${YDEF_NAT}" ]] && continue
 #	[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ] && continue
 #	[[ ! "${HGRID}" =~ ^[0-9]+x[0-9]+(_p850)*$ ]] && continue
@@ -148,6 +151,7 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	    DIR_IN_NEW=$( echo "${DIR_IN}" | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} XYDEF=${HGRID} ) || exit 1
 	    #
+	    [[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for reduce_grid.sh" ; exit 1; }
 	    ./reduce_grid.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		${DIR_IN_NEW} ${DIR_OUT} \
 		${HGRID} ${OVERWRITE} ${VAR} || exit 1
@@ -156,29 +160,30 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	    cd ${DIR_OUT}/../tstep || exit 1
 	    [[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
 	    cd - > /dev/null || exit 1
-	done
-    done
-done
+	done  # loop: VAR
+    done  # loop: HGRID
+    done  # loop: DIR_IN
+fi
 #
 ########## z -> p ##########
 #
 # multi pressure levels in low horizontal resolution
 # (including p on z -> z on p)
 #
-VARS_ANA=()
 if (( ${FLAG_TSTEP_Z2PRE} == 1 )) ; then
+    VARS_ANA=()
     VARS_ANA=( ml ms_omega ma_omega )  # default variables
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
-fi
-DIR_IN_LIST=()
-for HGRID in ${HGRID_LIST[@]} ; do
-    [[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
-    DIR_IN=${DCONV_TOP_RDIR}/ml_zlev/${HGRID}x${ZDEF}/tstep
-    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-done
-for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    DIR_IN_LIST=()
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
+	DIR_IN=${DCONV_TOP_RDIR}/ml_zlev/${HGRID}x${ZDEF}/tstep
+	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+    done
+    #
+    for DIR_IN in ${DIR_IN_LIST[@]} ; do
     for VAR in ${VARS_ANA[@]} ; do
 	if [[ "${VAR:3}" = "z" ]] ; then
 	    INPUT_CTL=${DIR_IN}/m${VAR:1:1}_pres/m${VAR:1:1}_pres.ctl
@@ -189,23 +194,39 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 	#
-	for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
+	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
+	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
 	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    #
 	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TAG=ml_plev ) || exit 1
-	    if (( ${PDEF} == 1 )) ; then
-		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS} ) || exit 1
+	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
+		DIR_OUT=$( conv_dir ${DIR_OUT} ZID=${PDEF_LEVELS_TMP} ) || exit 1
+	    elif (( ${PDEF} <= 5 )) ; then
+		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS//,/+} ) || exit 1
 	    else
 		DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || exit 1
 	    fi
 	    #
 	    if [[ "${VAR:3}" = "z" ]] ; then
-		./plev_z.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		    ${DIR_IN_NEW} ${DIR_OUT} \
-		    ${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+		if [[ ${FLAG_KEEP_NC} -eq 1 ]] ; then
+		    ./plev_z_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+			${DIR_IN_NEW} ${DIR_OUT} \
+			${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+		else
+		    ./plev_z.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+			${DIR_IN_NEW} ${DIR_OUT} \
+			${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+		fi
 	    else
-		./z2pre.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		    ${DIR_IN_NEW} ${DIR_OUT} \
-		    ${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+		if [[ ${FLAG_KEEP_NC} -eq 1 ]] ; then
+		    ./z2pre_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+			${DIR_IN_NEW} ${DIR_OUT} \
+			${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+		else
+		    ./z2pre.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+			${DIR_IN_NEW} ${DIR_OUT} \
+			${PDEF_LEVELS} ${OVERWRITE} ${VAR} || exit 1
+		fi
 	    fi
 	    #
 	    mkdir -p ${DIR_OUT}/../tstep || exit 1
@@ -213,59 +234,70 @@ for DIR_IN in ${DIR_IN_LIST[@]} ; do
 	    [[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
 	    cd - > /dev/null || exit 1
 	done
-    done
-done
+    done  # loop: VAR
+    done  # loop: DIR_IN
+fi  # end of ${FLAG_TSTEP_Z2PRE} == 1
 #
 # omega velocity on pressure level
 #
-VARS_ANA=()
 if (( ${FLAG_TSTEP_PLEVOMEGA} == 1 )) ; then
+    VARS_ANA=()
     VARS_ANA=( ms_omega ma_omega )
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
-fi
-DIR_INOUT_LIST=()
-PDEF_LEVELS_IN_LIST=()
-PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
-for HGRID in ${HGRID_LIST[@]} ; do
-    [[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
-    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
-	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-	if (( ${PDEF} == 1 )) ; then
-	    DIR_INOUT=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_p${PDEF_LEVELS}/tstep
-	else
-	    DIR_INOUT=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/tstep
-	fi
-	if [[ -d "${DIR_INOUT}" ]] ; then
-	    DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
-	    #PDEF_LEVELS_IN_LIST=( ${PDEF_LEVELS_IN_LIST[@]} ${PDEF_LEVELS} )
-	    PDEF_LEVELS_IN_LIST+=( ${PDEF_LEVELS} )
-	fi
+    DIR_INOUT_LIST=()
+    PDEF_LEVELS_IN_LIST=()
+    PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
+	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
+	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
+		DIR_INOUT=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_${PDEF_LEVELS_TMP}/tstep
+	    elif (( ${PDEF} <= 5 )) ; then
+		DIR_INOUT=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_p${PDEF_LEVELS//,/+}/tstep
+	    else
+		DIR_INOUT=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/tstep
+	    fi
+	    if [[ -d "${DIR_INOUT}" ]] ; then
+		DIR_INOUT_LIST=( ${DIR_INOUT_LIST[@]} ${DIR_INOUT} )
+		PDEF_LEVELS_IN_LIST+=( ${PDEF_LEVELS} )
+	    fi
+	done
     done
-done
-for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
-    DIR_INOUT=${DIR_INOUT_LIST[$i]}
-    PDEF_LEVELS_IN=${PDEF_LEVELS_IN_LIST[$i]}
-    PDEF=$( get_pdef ${PDEF_LEVELS_IN} ) || exit 1
-    #
-    for VAR in ${VARS_ANA[@]} ; do
-	TYPE=${VAR:1:1}
-	INPUT_CTL=${DIR_INOUT}/m${TYPE}_w/m${TYPE}_w.ctl
-	[[ ! -f "${INPUT_CTL}" ]] && continue
-	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
-	DIR_INOUT_NEW=$( echo ${DIR_INOUT} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
+    for(( i=0; $i<${#DIR_INOUT_LIST[@]}; i=$i+1 )) ; do
+	DIR_INOUT=${DIR_INOUT_LIST[$i]}
+	PDEF_LEVELS_IN=${PDEF_LEVELS_IN_LIST[$i]}
+	PDEF=$( get_pdef ${PDEF_LEVELS_IN} ) || exit 1
+        #
+	for VAR in ${VARS_ANA[@]} ; do
+	    TYPE=${VAR:1:1}
+	    INPUT_CTL=${DIR_INOUT}/m${TYPE}_w/m${TYPE}_w.ctl
+	    [[ ! -f "${INPUT_CTL}" ]] && { echo "warning: failed to create omega on p=${PDEF_LEVELS_IN}. (${INPUT_CTL} does not exist.)" ; continue ;  }
+	    PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
+	    DIR_INOUT_NEW=$( echo ${DIR_INOUT} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
+	    #
+	    if [[ ${FLAG_KEEP_NC} -eq 1 ]] ; then
+exit 1
+		./plev_omega_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_INOUT_NEW} \
+		    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || exit 1
+	    else
+		./plev_omega.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_INOUT_NEW} \
+		    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || exit 1
+	    fi
 	#
-	./plev_omega.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-	    ${DIR_INOUT_NEW} \
-	    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || exit 1
-	#
-	mkdir -p ${DIR_INOUT}/../tstep || exit 1
-	cd ${DIR_INOUT}/../tstep || exit 1
-	[[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
-	cd - > /dev/null || exit 1
-    done
-done
+	    mkdir -p ${DIR_INOUT}/../tstep || exit 1
+	    cd ${DIR_INOUT}/../tstep || exit 1
+	    [[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
+	    cd - > /dev/null || exit 1
+	done  # loop: VAR
+    done # loop: i
+fi  # end of ${FLAG_TSTEP_PLEVOMEGA} == 1
+
 
 ##
 ## vertical integral
@@ -304,89 +336,89 @@ done
 #    done
 #fi
 
-
+#
 ########## 2.9 ISCCP special ##########
 # to create 3-category tstep data
 #
-VARS_ANA=()
 if (( ${FLAG_TSTEP_ISCCP3CAT} == 1 )) ; then
+    VARS_ANA=()
     VARS_ANA=( dfq_isccp2 )
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
-fi
-DIR_IN_LIST=()
-for HGRID in ${HGRID_LIST[@]} ; do
-    [[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
-    for DIR_INPUT in ${DCONV_TOP_RDIR}/isccp/${HGRID}x${ZDEF_ISCCP}/tstep ; do
-	#[ -d "${DIR_INPUT}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_INPUT} )
-	[ -d "${DIR_INPUT}" ] && DIR_IN_LIST+=( ${DIR_INPUT} )
+    DIR_IN_LIST=()
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
+	for DIR_INPUT in ${DCONV_TOP_RDIR}/isccp/${HGRID}x${ZDEF_ISCCP}/tstep ; do
+	    [ -d "${DIR_INPUT}" ] && DIR_IN_LIST+=( ${DIR_INPUT} )
+	done
     done
-done
-for DIR_IN in ${DIR_IN_LIST[@]} ; do
-for VAR in ${VARS_ANA[@]} ; do
-    INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
-    [[ ! -f "${INPUT_CTL}" ]] && continue
-    PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
-    DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
-    DIR_OUT=$( conv_dir ${DIR_IN_NEW} ZDEF=3 ) || exit 1
-    #
-    ./isccp_3cat.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-	${DIR_IN_NEW} ${DIR_OUT} \
-	${OVERWRITE} || exit 1
-    #
-    mkdir -p ${DIR_OUT}/../tstep || exit 1
-    cd ${DIR_OUT}/../tstep || exit 1
-    [[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
-    cd - > /dev/null || exit 1
-done # loop: VAR
-done # loop: DIR_IN
+    for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
+	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
+	[[ ! -f "${INPUT_CTL}" ]] && continue
+	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
+	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
+	DIR_OUT=$( conv_dir ${DIR_IN_NEW} ZDEF=3 ) || exit 1
+        #
+	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for isccp_3cat.sh" ; exit 1; }
+	./isccp_3cat.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+	    ${DIR_IN_NEW} ${DIR_OUT} \
+	    ${OVERWRITE} || exit 1
+        #
+	mkdir -p ${DIR_OUT}/../tstep || exit 1
+	cd ${DIR_OUT}/../tstep || exit 1
+	[[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
+	cd - > /dev/null || exit 1
+    done # loop: VAR
+    done # loop: DIR_IN
+fi
 
 
 ########## zonal mean ##########
 #
-VARS_ANA=()
 if (( ${FLAG_TSTEP_ZM} == 1 )) ; then
+    VARS_ANA=()
     VARS_ANA=( all )
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
+    DIR_IN_LIST=()
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
+	for DIR_IN in \
+	    ${DCONV_TOP_RDIR}/{ll,ol,sl}/${HGRID}/tstep      \
+	    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}x${ZDEF}/tstep \
+	    ${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ; do
+	#[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
+	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+	done
+	for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/tstep
+	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+	done
+    done
+    for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
+	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
+	[[ ! -f "${INPUT_CTL}" ]] && continue
+	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
+	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
+	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
+        #
+	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for zonal_mean.sh" ; exit 1; }
+	./zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+	    ${DIR_IN_NEW} ${DIR_OUT} \
+	    ${OVERWRITE} ${VAR} || exit 1
+        #
+	mkdir -p ${DIR_OUT}/../tstep || exit 1
+	cd ${DIR_OUT}/../tstep || exit 1
+	[[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
+	cd - > /dev/null || exit 1
+    done  # loop: VAR
+    done  # loop: DIR_IN
 fi
-DIR_IN_LIST=()
-for HGRID in ${HGRID_LIST[@]} ; do
-    [[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
-    for DIR_IN in \
-	${DCONV_TOP_RDIR}/{ll,ol,sl}/${HGRID}/tstep      \
-	${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}x${ZDEF}/tstep \
-	${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ; do
-	#[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
-	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-    done
-    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
-	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-	DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/tstep
-	#[ -d "${DIR_IN}" ] && DIR_IN_LIST=( ${DIR_IN_LIST[@]} ${DIR_IN} )
-	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-    done
-done
-for DIR_IN in ${DIR_IN_LIST[@]} ; do
-for VAR in ${VARS_ANA[@]} ; do
-    INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
-    [[ ! -f "${INPUT_CTL}" ]] && continue
-    PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
-    DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
-    DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
-    #
-    ./zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-	${DIR_IN_NEW} ${DIR_OUT} \
-	${OVERWRITE} ${VAR} || exit 1
-    #
-    mkdir -p ${DIR_OUT}/../tstep || exit 1
-    cd ${DIR_OUT}/../tstep || exit 1
-    [[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
-    cd - > /dev/null || exit 1
-done  # loop: VAR
-done  # loop: DIR_IN
 
 ########## 4. meridional mean ##########
 #
@@ -468,10 +500,13 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    ${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/tstep ;  do
 	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
 	done
-	for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
+	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
+	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
 	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-	    if (( ${PDEF} == 1 )) ; then
-		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_p${PDEF_LEVELS}/tstep
+	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
+		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_${PDEF_LEVELS_TMP}/tstep
+	    elif (( ${PDEF} <= 5 )) ; then
+		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_p${PDEF_LEVELS//,/+}/tstep
 	    else
 		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/tstep
 	    fi
@@ -483,6 +518,8 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     for VAR in ${VARS_ANA[@]} ; do
 	[[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
 	DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
+	#
+	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for monthly_mean.sh / multistep.sh" ; exit 1; }
 	#
 	if [[ "${PERIOD}" == "monthly_mean" ]] ; then
 	    ./monthly_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
@@ -526,49 +563,52 @@ done
 #
 ########## zonal mean for monthly-mean data ##########
 #
-VARS_ANA=()
 if (( ${FLAG_MM_ZM} == 1 )) ; then
+    VARS_ANA=()
     VARS_ANA=( all )
     VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || exit 1
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]} ${VARS_ANA[@]} \
                               ${#VARS_MM[@]}  ${VARS_MM[@]} ) ) || exit 1
-fi
-DIR_IN_LIST=()
-for HGRID in ${HGRID_LIST[@]} ; do
-    [[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
-    for DIR_IN in \
-	${DCONV_TOP_RDIR}/{ll,ol,sl}/${HGRID}/monthly_mean      \
-	${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}x${ZDEF}/monthly_mean \
-	${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/monthly_mean ; do
-	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+    DIR_IN_LIST=()
+    for HGRID in ${HGRID_LIST[@]} ; do
+	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
+	for DIR_IN in \
+	    ${DCONV_TOP_RDIR}/{ll,ol,sl}/${HGRID}/monthly_mean      \
+	    ${DCONV_TOP_RDIR}/${ZDEF_TYPE}/${HGRID}x${ZDEF}/monthly_mean \
+	    ${DCONV_TOP_RDIR}/isccp/${HGRID}x{${ZDEF_ISCCP},3}/monthly_mean ; do
+	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+	done
+	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
+	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
+		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_${PDEF_LEVELS_TMP}/monthly_mean
+	    elif (( ${PDEF} <= 1 )) ; then
+		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_p${PDEF_LEVELS//,/+}/monthly_mean
+	    else
+		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/monthly_mean
+	    fi
+	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
+	done
     done
-    for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
-	PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
-	if (( ${PDEF} == 1 )) ; then
-	    DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_p${PDEF_LEVELS}/monthly_mean
-	else
-	    DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/monthly_mean
-	fi
-	[[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
-    done
-done
-for DIR_IN in ${DIR_IN_LIST[@]} ; do
-for VAR in ${VARS_ANA[@]} ; do
-    INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
-    [[ ! -f "${INPUT_CTL}" ]] && continue
+    for DIR_IN in ${DIR_IN_LIST[@]} ; do
+    for VAR in ${VARS_ANA[@]} ; do
+	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
+	[[ ! -f "${INPUT_CTL}" ]] && continue
 #	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 #	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 #	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
-    DIR_OUT=$( conv_dir ${DIR_IN} XDEF=MMZMEAN ) || exit 1
+	DIR_OUT=$( conv_dir ${DIR_IN} XDEF=MMZMEAN ) || exit 1
     #
-    ./monthly_zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-	${DIR_IN} ${DIR_OUT} \
-	${OVERWRITE} ${VAR} || exit 1
-done  # loop: VAR
-done  # loop: DIR_IN
+	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for monthly_zonal_mean.sh" ; exit 1; }
+	./monthly_zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+	    ${DIR_IN} ${DIR_OUT} \
+	    ${OVERWRITE} ${VAR} || exit 1
+    done  # loop: VAR
+    done  # loop: DIR_IN
+fi
 
-echo "$0 normally finished."
-date
+echo "$0 normally finished ($(date))."
 exit
 
 # below to be modified
