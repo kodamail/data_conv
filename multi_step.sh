@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # *_step or *_mean
 #
@@ -36,6 +36,11 @@ if [ "${TARGET_VAR}" = "" ] ; then
     VAR_LIST=( $( ls ${INPUT_DIR}/ ) ) || exit 1
 else
     VAR_LIST=( ${TARGET_VAR} )
+fi
+
+FLAG_HALF=0
+if [[ "${OUTPUT_PERIOD}" =~ half$ ]] ; then
+    FLAG_HALF=1
 fi
 
 NOTHING=1
@@ -159,6 +164,12 @@ for VAR in ${VAR_LIST[@]} ; do
 	echo "error"
 	exit 1
     fi
+
+    if [[ ${FLAG_HALF} = 1 ]] ; then  # shifted by half time grid (forward)
+	TEMP=$( echo "${OUTPUT_TDEF_INCRE_SEC} / 2" | bc )
+	OUTPUT_TDEF_START=$( date -u --date "${OUTPUT_TDEF_START} ${TEMP} seconds" +%H:%Mz%d%b%Y )
+    fi
+
     let OUTPUT_TDEF=INPUT_TDEF/TSKIP
     let OUTPUT_TDEF_FILE=OUTPUT_TDEF_INCRE_FILE_SEC/OUTPUT_TDEF_INCRE_SEC   # per one file
     echo "OUTPUT_TDEF_START = ${OUTPUT_TDEF_START}"
@@ -275,6 +286,10 @@ for VAR in ${VAR_LIST[@]} ; do
 	#
 	TMIN=$( echo "(${d}-1)*${TSKIP}+1" | bc ) || exit 1
 	TMAX=$( echo "(${d}+${OUTPUT_TDEF_FILE}-1)*${TSKIP}" | bc ) || exit 
+	if [[ ${FLAG_HALF} = 1 ]] ; then  # shifted by half time grid (forward)
+	    TMIN=$( echo "${TMIN}+${TSKIP}/2" | bc ) || exit 1
+	    TMAX=$( echo "${TMAX}+${TSKIP}/2" | bc ) || exit 
+	fi
         echo "YMD=${YMD} INPUT_T=${TMIN} ${TMAX}"
 	NOTHING=0
 
