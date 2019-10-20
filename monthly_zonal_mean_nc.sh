@@ -110,7 +110,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #---- generate control file (unified)
     #
 #    mkdir -p ${OUTPUT_DIR}/${VAR}/log
-    if [[ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ]] ; then
+    if [[ ! "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] ; then
 	sed ${INPUT_CTL_META} \
 	    -e "s|^DSET .*|DSET ^%y4/${VAR}_%y4%m2.nc|" \
 	    > ${OUTPUT_CTL}

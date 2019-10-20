@@ -124,7 +124,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     #---- generate control file (unified)
     #
-    if [ "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
+    if [[ ! "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] ; then
 	sed ${INPUT_CTL_META} \
 	    -e "s|^DSET .*|DSET ^%ch.nc|" \
 	    -e "/^CHSUB .*/d" \
