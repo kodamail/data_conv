@@ -204,5 +204,5 @@ for VAR in ${VAR_LIST[@]} ; do
 done  # loop: VAR
 
 (( ${NOTHING} == 1 )) && echo "info: Nothing to do."
-echo "$0 normally finished."
+echo "$0 normally finished ($(date))."
 echo

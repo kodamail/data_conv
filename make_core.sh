@@ -151,10 +151,16 @@ if (( ${FLAG_TSTEP_REDUCE} == 1 )) ; then
 	    DIR_IN_NEW=$( echo "${DIR_IN}" | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} XYDEF=${HGRID} ) || exit 1
 	    #
-	    [[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for reduce_grid.sh" ; exit 1; }
-	    ./reduce_grid.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		${DIR_IN_NEW} ${DIR_OUT} \
-		${HGRID} ${OVERWRITE} ${VAR} || exit 1
+#	    [[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for reduce_grid.sh" ; exit 1; }
+	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
+		./reduce_grid_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN_NEW} ${DIR_OUT} \
+		    ${HGRID} ${OVERWRITE} ${VAR} || exit 1
+	    else
+		./reduce_grid.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN_NEW} ${DIR_OUT} \
+		    ${HGRID} ${OVERWRITE} ${VAR} || exit 1
+	    fi
 	    #
 	    mkdir -p ${DIR_OUT}/../tstep || exit  1
 	    cd ${DIR_OUT}/../tstep || exit 1
@@ -519,20 +525,30 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	[[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
 	DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 	#
-	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for monthly_mean.sh / multistep.sh" ; exit 1; }
-	#
 	if [[ "${PERIOD}" == "monthly_mean" ]] ; then
-	    ./monthly_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		${DIR_IN} ${DIR_OUT} \
-		${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
+		./monthly_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+	    else
+		./monthly_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+	    fi
 	else
 	    SA=
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
 #		echo "error! multi_step3.sh should be re-written!"
 #		exit 1
-	    ./multi_step.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		${DIR_IN} ${DIR_OUT} \
-		${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
+	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
+		./multi_step_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
+	    else
+		./multi_step.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
+	    fi
 	fi
     done  # loop: VAR
     done  # loop: DIR_IN
@@ -600,10 +616,15 @@ if (( ${FLAG_MM_ZM} == 1 )) ; then
 #	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
 	DIR_OUT=$( conv_dir ${DIR_IN} XDEF=MMZMEAN ) || exit 1
     #
-	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for monthly_zonal_mean.sh" ; exit 1; }
-	./monthly_zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-	    ${DIR_IN} ${DIR_OUT} \
-	    ${OVERWRITE} ${VAR} || exit 1
+	if (( ${FLAG_KEEP_NC} == 1 )) ; then
+	    ./monthly_zonal_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		${DIR_IN} ${DIR_OUT} \
+		${OVERWRITE} ${VAR} || exit 1
+	else
+	    ./monthly_zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		${DIR_IN} ${DIR_OUT} \
+		${OVERWRITE} ${VAR} || exit 1
+	fi
     done  # loop: VAR
     done  # loop: DIR_IN
 fi
