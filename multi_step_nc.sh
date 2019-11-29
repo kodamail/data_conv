@@ -152,8 +152,9 @@ for VAR in ${VAR_LIST[@]} ; do
     INPUT_DSET_LIST=( $( grads_ctl.pl ${INPUT_CTL} DSET "${TMIN}:${TMAX}" ) )
     INPUT_NC_LIST=()
     for INPUT_DSET in ${INPUT_DSET_LIST[@]} ; do
-	INPUT_NC=$( readlink -e ${INPUT_DSET/^/${INPUT_CTL_META%/*}\//} ) \
-	    || { echo "error: ${INPUT_DSET/^/${INPUT_CTL_META%/*}\//} does not exist." ; exit 1 ; }
+	INPUT_NC_TMP=${INPUT_DSET/^/${INPUT_CTL%/*}\//}
+	INPUT_NC=$( readlink -e ${INPUT_NC_TMP} ) \
+	    || { echo "error: ${INPUT_NC_TMP} does not exist." ; exit 1 ; }
 	INPUT_NC_LIST+=( ${INPUT_NC} )
     done
 
@@ -206,7 +207,8 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
     YMD_PREV=-1
     for INPUT_NC in ${INPUT_NC_LIST[@]} ; do
-	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
+#	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
+	TDEF_FILE=$( cdo -s ntime ${INPUT_NC} ) || exit 1
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
         YMD=$( date -u --date "${YMD_GRADS}" +%Y%m%d ) || exit 1
 	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
@@ -235,11 +237,13 @@ for VAR in ${VAR_LIST[@]} ; do
 	#
 	if [[ "${SA}" = "s" ]] ; then  # snapshot
 	    TLIST=$( seq -s , ${TSKIP} ${TSKIP} ${TDEF_FILE} )
-	    ${BIN_CDO} -s -b 32 seltimestep,${TLIST} ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
+#	    ${BIN_CDO} -s -b 32 seltimestep,${TLIST} ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
+	    cdo -s -b 32 seltimestep,${TLIST} ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
 	    mv ${TEMP_DIR}/tmp.nc ${OUTPUT_NC} || exit 1
 
 	elif [[ "${SA}" = "a" ]] ; then  # time mean
-	    ${BIN_CDO} -s -b 32 timselmean,${TSKIP} ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
+#	    ${BIN_CDO} -s -b 32 timselmean,${TSKIP} ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
+	    cdo -s -b 32 timselmean,${TSKIP} ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
 	    mv ${TEMP_DIR}/tmp.nc ${OUTPUT_NC} || exit 1
 	else
 	    echo "error: SA = ${SA} is not supported"

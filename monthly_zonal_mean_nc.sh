@@ -94,8 +94,12 @@ for VAR in ${VAR_LIST[@]} ; do
     INPUT_DSET_LIST=( $( grads_ctl.pl ${INPUT_CTL} DSET "${TMIN}:${TMAX}" ) )
     INPUT_NC_LIST=()
     for INPUT_DSET in ${INPUT_DSET_LIST[@]} ; do
-	INPUT_NC=$( readlink -e ${INPUT_DSET/^/${INPUT_CTL_META%/*}\//} ) \
-	    || { echo "error: ${INPUT_DSET/^/${INPUT_CTL_META%/*}\//} does not exist." ; exit 1 ; }
+	INPUT_NC_TMP=${INPUT_DSET/^/${INPUT_CTL_META%/*}\//}
+#	echo ${INPUT_NC_TMP}
+#	INPUT_NC=$( readlink -e ${INPUT_NC_TMP} ) \
+#	    || { echo "error: ${INPUT_NC_TMP} does not exist." ; exit 1 ; }
+	INPUT_NC=$( readlink -e ${INPUT_NC_TMP} ) \
+	    || { echo "warning: ${INPUT_NC_TMP} does not exist. Skip!" ; continue ; }
 	INPUT_NC_LIST+=( ${INPUT_NC} )
     done
 
@@ -132,9 +136,15 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
 #    YM_PREV=-1
     for INPUT_NC in ${INPUT_NC_LIST[@]} ; do
-	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
-	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
-        YM=$( date -u --date "${YMD_GRADS}" +%Y%m ) || exit 1
+#	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
+	# First assume INPUT_NC: ${VAR}_${YM}.nc
+	INPUT_NC_TMP=${INPUT_NC##*/}
+	INPUT_NC_TMP=${INPUT_NC_TMP%.nc}
+	YM=${INPUT_NC_TMP#${VAR}_}
+	if [[ ! ${YM} =~ ^[0-9]{6}$ ]] ; then
+	    YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
+            YM=$( date -u --date "${YMD_GRADS}" +%Y%m ) || exit 1
+	fi
 #	(( ${YM} == ${YM_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
 	YEAR=${YM:0:4}
         #
@@ -156,7 +166,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	[[ "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] && continue
 	#
 	mkdir -p ${OUTPUT_NC%/*} || exit 1
-        echo "YM=${YM}"
+	echo "INPUT_NC=${INPUT_NC}"
 	NOTHING=0
 	#
 	${BIN_CDO} -s -b 32 zonmean ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1

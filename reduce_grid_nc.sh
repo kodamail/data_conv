@@ -82,7 +82,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     #----- check existence of input data
     #
-    if [ "${START_HMS}" != "000000" ] ; then
+    if [[ "${START_HMS}" != "000000" ]] ; then
 #	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
 	TMIN=$( grads_time2t.sh ${INPUT_CTL_META} ${START_YMD} -gt ) || exit 1
 	TMAX=$( grads_time2t.sh ${INPUT_CTL_META} ${ENDPP_YMD} -le ) || exit 1
@@ -179,12 +179,12 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
     #  loop for each file
     #========================================#
-    YMD_PREV=-1
+#    YMD_PREV=-1
     for INPUT_NC in ${INPUT_NC_LIST[@]} ; do
 	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
         YMD=$( date -u --date "${YMD_GRADS}" +%Y%m%d ) || exit 1
-	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
+#	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
 	YEAR=${YMD:0:4}
         #
         #----- output data
