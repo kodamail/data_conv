@@ -15,7 +15,7 @@ BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
 BIN_Z2PRE=${DIR_NICAM}/z2pre
 
-BIN_CDO=/home/kodama/bin/cdo
+#BIN_CDO=/home/kodama/bin/cdo
 
 INPUT_TOP_RDIR=NOT_SPECIFIED
 DCONV_TOP_RDIR=NOT_SPECIFIED
