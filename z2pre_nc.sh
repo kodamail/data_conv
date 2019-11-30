@@ -101,7 +101,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	INPUT_PRES_NC=$( readlink -e ${INPUT_PRES_NC_LIST[$d]} ) || exit 1
 	#
 #	TDEF_FILE=$( ncdump -h ${INPUT_NC} | grep "time =" | cut -d \; -f 1 |  cut -d = -f 2 )
-	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
+	TDEF_FILE=$( cdo -s ntime ${INPUT_NC} )
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
         YMD=$( date -u --date "${YMD_GRADS}" +%Y%m%d ) || exit 1
 	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }

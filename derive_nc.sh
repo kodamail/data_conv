@@ -148,7 +148,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	INPUT_REF_NC=${INPUT_W_NC}
 	#
 #	TDEF_FILE=$( ncdump -h ${INPUT_REF_NC} | grep "time =" | cut -d \; -f 1 |  cut -d = -f 2 )
-	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_REF_NC} )
+	TDEF_FILE=$( cdo -s ntime ${INPUT_REF_NC} )
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_REF_NC} TDEF 1 )
         YMD=$( date -u --date "${YMD_GRADS}" +%Y%m%d ) || exit 1
 	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
@@ -189,11 +189,11 @@ for VAR in ${VAR_LIST[@]} ; do
 	#
 	NOTHING=0
 	cd ${TEMP_DIR}	
-	${BIN_CDO} -s -b 32 mul ${INPUT_PRES_NC} ${INPUT_W_NC} pw.nc || exit 1
-	${BIN_CDO} -s -b 32 div pw.nc ${INPUT_TEM_NC} pwt.nc || exit 1
-	${BIN_CDO} -s -b 32 mulc,${VAL} pwt.nc temp.nc || exit 1
-	${BIN_CDO} -s setname,ms_omega temp.nc temp2.nc || exit 1
-	${BIN_CDO} -s setattribute,ms_omega@units="Pa/s",ms_omega@long_name="pressure velocity diagnosed from hydrostatic balance" temp2.nc temp3.nc || exit 1
+	cdo -s -b 32 mul ${INPUT_PRES_NC} ${INPUT_W_NC} pw.nc || exit 1
+	cdo -s -b 32 div pw.nc ${INPUT_TEM_NC} pwt.nc || exit 1
+	cdo -s -b 32 mulc,${VAL} pwt.nc temp.nc || exit 1
+	cdo -s setname,ms_omega temp.nc temp2.nc || exit 1
+	cdo -s setattribute,ms_omega@units="Pa/s",ms_omega@long_name="pressure velocity diagnosed from hydrostatic balance" temp2.nc temp3.nc || exit 1
 	mv temp3.nc ${OUTPUT_NC} || exit 1
 	rm pw.nc pwt.nc temp.nc temp2.nc
 	#

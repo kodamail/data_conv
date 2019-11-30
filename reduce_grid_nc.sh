@@ -181,7 +181,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
 #    YMD_PREV=-1
     for INPUT_NC in ${INPUT_NC_LIST[@]} ; do
-	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
+	TDEF_FILE=$( cdo -s ntime ${INPUT_NC} )
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
         YMD=$( date -u --date "${YMD_GRADS}" +%Y%m%d ) || exit 1
 #	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
