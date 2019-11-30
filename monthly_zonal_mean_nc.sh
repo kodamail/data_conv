@@ -169,7 +169,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	echo "INPUT_NC=${INPUT_NC}"
 	NOTHING=0
 	#
-	${BIN_CDO} -s -b 32 zonmean ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
+	cdo -s -b 32 zonmean ${INPUT_NC} ${TEMP_DIR}/tmp.nc || exit 1
 	mv ${TEMP_DIR}/tmp.nc ${OUTPUT_NC} || exit 1
 
     done
