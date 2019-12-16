@@ -146,13 +146,11 @@ for VAR in ${VAR_LIST[@]} ; do
     pname     = '${INPUT_PRES_NC}',
     outdir    = './',
     outsuffix = '_${YMD}.nc',
-    input_netcdf  = .true.
-    output_netcdf = .true.
+    input_netcdf  = .true.,
+    output_netcdf = .true.,
     undef     = -99.9e+33,      !
 /
 EOF
-#    insuffix  = '.nc',
-#	cat z2pre.cnf
 #	${BIN_Z2PRE} 
 	# TODO: error handling
 	if (( ${VERBOSE} >= 1 )) ; then
