@@ -535,6 +535,15 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 		    ${DIR_IN} ${DIR_OUT} \
 		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
 	    fi
+	elif [[ "${PERIOD}" == "annual_mean" ]] ; then
+	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
+		./annual_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN} ${DIR_OUT} \
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+	    else
+		echo "error"
+		exit 1
+	    fi
 	else
 	    SA=
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
