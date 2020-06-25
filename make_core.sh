@@ -536,9 +536,11 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
 	    fi
 	elif [[ "${PERIOD}" == "annual_mean" ]] ; then
+	    DIR_IN_NEW=${DIR_IN%tstep}monthly_mean  # use monthly-mean
+	    [[ ! -d ${DIR_IN_NEW} ]] && continue
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./annual_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
-		    ${DIR_IN} ${DIR_OUT} \
+		    ${DIR_IN_NEW} ${DIR_OUT} \
 		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
 	    else
 		echo "error"
