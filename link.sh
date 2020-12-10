@@ -32,6 +32,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	INPUT_TIME=${INPUT_TIME_LIST[$i]}
 	EXT=${EXT_LIST[$i]}
 	INPUT_CTL_LIST=()
+	INPUT_CTL_META_LIST=()
 	VAR_LIST=()
 	echo ${INPUT_DIR_CTL}
 	[[ ! -d ${INPUT_DIR_CTL} ]] && { echo "  -> skip!" ; continue ; }
@@ -45,21 +46,26 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl   2> /dev/null ) )
 	(( ${#TMP_LIST[@]} == 0 )) && TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl   2> /dev/null ) )
 
-
 	for TMP in ${TMP_LIST[@]} ; do
+	    TMP_META=${TMP}
+	    [[ -f ${TMP%.ctl}_meta.ctl ]] && TMP_META=${TMP%.ctl}_meta.ctl
+	    [[ -f ${TMP%/*}/meta/${TMP##*/} ]] && TMP_META=${TMP%/*}/meta/${TMP##*/}
+
 	    if [[ ${VDEF_PER_FILE} == 1 ]] ; then
 		VDEF=1
 	    else
-		VDEF=$( grads_ctl.pl ${TMP} VARS NUM ) || exit 1
+		VDEF=$( grads_ctl.pl ${TMP_META} VARS NUM ) || exit 1
 	    fi
 
 	    if [[ ${VDEF} = 1 ]] ; then
 		INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
+		INPUT_CTL_META_LIST[${#INPUT_CTL_META_LIST[@]}]=${TMP_META}
 		VAR_LIST[${#VAR_LIST[@]}]=$( echo "${TMP}" | sed -e "s|.ctl$||g" -e "s|^.*/||g" ) || exit 1
 	    else
 		SUBVAR_LIST=( $( grads_ctl.pl ${TMP} VARS ALL ) ) || exit 1
 		for SUBVAR in ${SUBVAR_LIST[@]} ; do
 		    INPUT_CTL_LIST[${#INPUT_CTL_LIST[@]}]=${TMP}
+		    INPUT_CTL_META_LIST[${#INPUT_CTL_META_LIST[@]}]=${TMP_META}
 		    VAR_LIST[${#VAR_LIST[@]}]=${SUBVAR}
 		done
 	    fi
@@ -69,12 +75,13 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    VAR_ORG=${VAR_LIST[$j]}
 	    VAR=${VAR_ORG}
 	    INPUT_CTL=${INPUT_CTL_LIST[$j]}
+	    INPUT_CTL_META=${INPUT_CTL_META_LIST[$j]}
 	    INPUT_DIR_CTL_CHILD=${INPUT_CTL%/*}
 	    #
 	    FLAG_CHSUB=$( grep -l "^CHSUB" ${INPUT_CTL} )
-	    INPUT_CTL_META=${INPUT_CTL}
-	    [[ -f ${INPUT_CTL%.ctl}_meta.ctl ]] && INPUT_CTL_META=${INPUT_CTL%.ctl}_meta.ctl
-	    [[ -f ${INPUT_CTL%/*}/meta/${INPUT_CTL##*/} ]] && INPUT_CTL_META=${INPUT_CTL%/*}/meta/${INPUT_CTL##*/}
+#	    INPUT_CTL_META=${INPUT_CTL}
+#	    [[ -f ${INPUT_CTL%.ctl}_meta.ctl ]] && INPUT_CTL_META=${INPUT_CTL%.ctl}_meta.ctl
+#	    [[ -f ${INPUT_CTL%/*}/meta/${INPUT_CTL##*/} ]] && INPUT_CTL_META=${INPUT_CTL%/*}/meta/${INPUT_CTL##*/}
 	    #
 	    echo "  ${VAR_ORG}"
             #
@@ -100,7 +107,6 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	    fi
 	    #
 	    # dimension
-
             DIMS=( $( grads_ctl.pl ${INPUT_CTL_META} DIMS NUM ) ) || exit 1
 	    XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]} ; 
 	    XDEF5=$( printf "%05d" ${XDEF} )
@@ -150,6 +156,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		    exit 1
 		fi
 	    fi
+
 #	    if [[ "${PLEV}" != "" ]] ; then
 	    if [[ "${PLEV_STR}" != "" ]] ; then
 		OUTPUT_DIR=${DCONV_TOP_RDIR}/${TAG}/${XDEF5}x${YDEF5}_${PLEV_STR}/${PERIOD}/${VAR}
