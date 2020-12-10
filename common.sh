@@ -306,3 +306,16 @@ function tstep_2_period()
     echo ${PERIOD}
 }
 
+
+utmp=tmp_$( hostname -s )_$$
+
+#
+# error handling (do not use from common.sh)
+#
+function error_exit()
+{
+    local msg=${1:-}
+    local ret=${2:-1}
+    echo "Error in $0 (line: ${BASH_LINENO[0]}): ${msg}" >&2
+    exit ${ret}
+}

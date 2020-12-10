@@ -15,19 +15,17 @@ TARGET_VAR=$8  # variable name (optional)
 set +x
 echo "##########"
 
-source ./common.sh ${CNFID} || exit 1
+source ./common.sh ${CNFID} || error_exit
 
-create_temp || exit 1
+create_temp || error_exit
 TEMP_DIR=${BASH_COMMON_TEMP_DIR}
 trap "finish" 0
 
-if [[ ! "${OVERWRITE}" =~ ^(|yes|no|dry-rm|rm)$ ]] ; then
-    echo "error: OVERWRITE = ${OVERWRITE} is not supported yet." >&2
-    exit 1
-fi
+[[ ! "${OVERWRITE}" =~ ^(|yes|no|dry-rm|rm)$ ]] \
+    && error_exit "error: OVERWRITE = ${OVERWRITE} is not supported yet."
 
 if [[ "${TARGET_VAR}" = "" ]] ; then
-    VAR_LIST=( $( ls ${INPUT_DIR}/ ) ) || exit 1
+    VAR_LIST=( $( ls ${INPUT_DIR}/ ) ) || error_exit
 else
     VAR_LIST=( ${TARGET_VAR} )
 fi
@@ -49,8 +47,8 @@ for VAR in ${VAR_LIST[@]} ; do
     #
     #----- check existence of output data
     #
-    YM_STARTMM=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || exit 1
-    YM_END=$( date -u --date "${ENDPP_YMD} 1 month ago"  +%Y%m ) || exit 1
+    YM_STARTMM=$(     date -u --date "${START_YMD} 1 second ago" +%Y%m ) || error_exit
+    YM_END=$( date -u --date "${ENDPP_YMD} 1 month ago"  +%Y%m ) || error_exit
 
 ##    if [ -f "${OUTPUT_CTL}" ] ; then
 #    if [ -f "${OUTPUT_CTL}" -a "${OVERWRITE}" != "rm" -a "${OVERWRITE}" != "dry-rm" ] ; then
@@ -63,7 +61,7 @@ for VAR in ${VAR_LIST[@]} ; do
 #    fi
 
     OUTPUT_CTL=${OUTPUT_DIR}/${VAR}/${VAR}.ctl
-    mkdir -p ${OUTPUT_DIR}/${VAR} || exit 1
+    mkdir -p ${OUTPUT_DIR}/${VAR} || error_exit
 
     #
     #----- get number of grids for input/output
@@ -73,16 +71,16 @@ for VAR in ${VAR_LIST[@]} ; do
         echo "warning: ${INPUT_CTL} does not exist."
         continue
     fi
-    INPUT_CTL_META=$( ctl_meta ${INPUT_CTL} ) || exit 1
-    DIMS=( $( grads_ctl.pl ${INPUT_CTL_META} DIMS NUM ) ) || exit 1
+    INPUT_CTL_META=$( ctl_meta ${INPUT_CTL} ) || error_exit
+    DIMS=( $( grads_ctl.pl ${INPUT_CTL_META} DIMS NUM ) ) || error_exit
     XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]}
     INPUT_TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
-    (( ${EDEF} > 1 )) && { echo "error: EDEF=${EDEF} is not supported in $0" ; exit 1 ; }
-    INPUT_TDEF_START=$(     grads_ctl.pl ${INPUT_CTL_META} TDEF 1 ) || exit 1
-    INPUT_TDEF_INCRE_SEC=$( grads_ctl.pl ${INPUT_CTL_META} TDEF INC --unit SEC | sed -e "s/SEC//" ) || exit 1
+    (( ${EDEF} > 1 )) && error_exit "EDEF=${EDEF} is not supported"
+    INPUT_TDEF_START=$(     grads_ctl.pl ${INPUT_CTL_META} TDEF 1 ) || error_exit
+    INPUT_TDEF_INCRE_SEC=$( grads_ctl.pl ${INPUT_CTL_META} TDEF INC --unit SEC | sed -e "s/SEC//" ) || error_exit
     SUBVARS=( ${VAR} )
     if [[ "${INC_SUBVARS}" = "yes" ]] ; then
-	SUBVARS=( $( grads_ctl.pl ${INPUT_CTL_META} VARS ALL ) ) || exit 1
+	SUBVARS=( $( grads_ctl.pl ${INPUT_CTL_META} VARS ALL ) ) || error_exit
     fi
     VDEF=${#SUBVARS[@]}
     #
@@ -100,7 +98,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	    YM=$( date -u --date "${YM}01 1 month" +%Y%m )
 	    let OUTPUT_TDEF=OUTPUT_TDEF+1
 	done
-	OUTPUT_TDEF_START=15$( date -u --date "${INPUT_TDEF_START}" +%b%Y ) || exit 1
+	OUTPUT_TDEF_START=15$( date -u --date "${INPUT_TDEF_START}" +%b%Y ) || error_exit
 	sed ${INPUT_CTL_META} \
 	    -e "s|^DSET .*|DSET ^%y4/${VAR}_%y4%m2.nc|" \
 	    -e "/^CHSUB .*/d" \
@@ -116,8 +114,8 @@ for VAR in ${VAR_LIST[@]} ; do
         #
         #----- set/proceed date -----#
         #
-	YM=$(   date -u --date "${YM}01 1 month" +%Y%m ) || exit 1
-	YMPP=$( date -u --date "${YM}01 1 month" +%Y%m ) || exit 1
+	YM=$(   date -u --date "${YM}01 1 month" +%Y%m ) || error_exit
+	YMPP=$( date -u --date "${YM}01 1 month" +%Y%m ) || error_exit
         YEAR=${YM:0:4} ; MONTH=${YM:4:2}
         #
         #----- output data
@@ -137,19 +135,19 @@ for VAR in ${VAR_LIST[@]} ; do
 	fi
 	[[ "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] && continue
 	#
-	mkdir -p ${OUTPUT_NC%/*} || exit 1
+	mkdir -p ${OUTPUT_NC%/*} || error_exit
 	NOTHING=0
         #
         #----- check existence of input data
         #
 	if [[ "${START_HMS}" != "000000" ]] ; then
 #	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "(${START_YMD}:${ENDPP_YMD}]" ) ) || exit 1
-	    TMIN=$( grads_time2t.sh ${INPUT_CTL_META} ${YM}01 -gt ) || exit 1
-	    TMAX=$( grads_time2t.sh ${INPUT_CTL_META} ${YMPP}01 -le ) || exit 1
+	    TMIN=$( grads_time2t.sh ${INPUT_CTL_META} ${YM}01   -gt ) || error_exit
+	    TMAX=$( grads_time2t.sh ${INPUT_CTL_META} ${YMPP}01 -le ) || error_exit
 	else
 #	FLAG=( $( grads_exist_data.sh ${INPUT_CTL} -ymd "[${START_YMD}:${ENDPP_YMD})" ) ) || exit 1
-	    TMIN=$( grads_time2t.sh ${INPUT_CTL_META} ${YM}01 -ge ) || exit 1
-	    TMAX=$( grads_time2t.sh ${INPUT_CTL_META} ${YMPP}01 -lt ) || exit 1
+	    TMIN=$( grads_time2t.sh ${INPUT_CTL_META} ${YM}01   -ge ) || error_exit
+	    TMAX=$( grads_time2t.sh ${INPUT_CTL_META} ${YMPP}01 -lt ) || error_exit
 	fi
 	echo "YM=${YM} (TMIN=${TMIN}, TMAX=${TMAX})"
 	#
@@ -158,13 +156,13 @@ for VAR in ${VAR_LIST[@]} ; do
 	for INPUT_DSET in ${INPUT_DSET_LIST[@]} ; do
 	    INPUT_NC_TMP=${INPUT_DSET/^/${INPUT_CTL%/*}\//}
 	    INPUT_NC=$( readlink -e ${INPUT_NC_TMP} ) \
-		|| { echo "error: ${INPUT_NC_TMP} does not exist." ; exit 1 ; }
+		|| error_exit "${INPUT_NC_TMP} does not exist."
 	    INPUT_NC_LIST+=( ${INPUT_NC} )
 	done
 	
-	cdo -s -b 32 copy ${INPUT_NC_LIST[@]} ${TEMP_DIR}/tmp.nc    || exit 1
-	cdo -s -b 32 timmean ${TEMP_DIR}/tmp.nc ${TEMP_DIR}/tmp2.nc || exit 1
-	mv ${TEMP_DIR}/tmp2.nc ${OUTPUT_NC} || exit 1
+	cdo -s -b 32 copy ${INPUT_NC_LIST[@]} ${TEMP_DIR}/tmp.nc    || error_exit
+	cdo -s -b 32 timmean ${TEMP_DIR}/tmp.nc ${TEMP_DIR}/tmp2.nc || error_exit
+	mv ${TEMP_DIR}/tmp2.nc ${OUTPUT_NC} || error_exit
     done  # loop: YM
 
 done  # loop: VAR
