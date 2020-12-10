@@ -36,11 +36,16 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 	echo ${INPUT_DIR_CTL}
 	[[ ! -d ${INPUT_DIR_CTL} ]] && { echo "  -> skip!" ; continue ; }
 	
-	if [[ "${SEP_DIR_LIST[$i]}" = "1"  ]] ; then
-	    TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl 2> /dev/null ) )
-	else
-	    TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl   2> /dev/null ) )
-	fi
+#	if [[ "${SEP_DIR_LIST[$i]}" = "1"  ]] ; then
+#	    TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl 2> /dev/null ) )
+#	else
+#	    TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl   2> /dev/null ) )
+#	fi
+
+	TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*.ctl   2> /dev/null ) )
+	(( ${#TMP_LIST[@]} == 0 )) && TMP_LIST=( $( ls ${INPUT_DIR_CTL}/*/*.ctl   2> /dev/null ) )
+
+
 	for TMP in ${TMP_LIST[@]} ; do
 	    if [[ ${VDEF_PER_FILE} == 1 ]] ; then
 		VDEF=1
@@ -160,7 +165,7 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 		OUTPUT_DIR2=$( echo "${OUTPUT_DIR}" | sed -e "s|/${PERIOD}/|/tstep/|" )
 		mkdir -p ${OUTPUT_DIR2%/*}
 		rm -f ${OUTPUT_DIR2}
-		ln -s ../${PERIOD}/${VAR} ${OUTPUT_DIR2}
+		ln -s ../${PERIOD}/${VAR} ${OUTPUT_DIR2} || exit 1
 	    fi
 
 	    #if [[ ${#CHSUB_LIST[@]} -gt 0 ]] ; then
@@ -181,7 +186,6 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 
 		sed ${INPUT_CTL} -e "s|^DSET ^\(.*\)|DSET ^${DIFF}/\1|i" \
 		    > ${OUTPUT_CTL}.new || exit 1
-
 
 		if [[ "${VAR}" != "${VAR_ORG}" ]] ; then
 		    echo "VARS 1"             >> ${OUTPUT_CTL}.new
@@ -250,7 +254,8 @@ while [[ -n "$1" ]] ; do  # for all the arguments
 
 		if [[ ! -e ${OUTPUT_DIR}/grd ]] ; then
 		    LINK_DIR=$( diff-path ${OUTPUT_DIR} ${INPUT_DIR_CTL_CHILD} ) || exit 1
-		    ln -s ${LINK_DIR} ${OUTPUT_DIR}/grd
+		    rm -f ${OUTPUT_DIR}/grd
+		    ln -s ${LINK_DIR} ${OUTPUT_DIR}/grd || exit 1
 		fi
 
 #		# just link all files/dirs
