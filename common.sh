@@ -10,6 +10,10 @@ CNFID=${1:-def}   # CNFID ("def" by default)
 
 #############################################################
 
+export PATH=/home/kodama/data/program/sh/bash_common/release-20180205:${PATH}
+#export PATH=/home/kodama/data/program/sh/grads_ctl/develop-20210106:${PATH}
+export PATH=/home/kodama/data/program/sh/grads_ctl/develop-20210119:${PATH}
+
 DIR_NICAM=/home/kodama/NICAM_src/bin
 BIN_NC2CTL=${DIR_NICAM}/nc2ctl
 BIN_ROUGHEN=${DIR_NICAM}/roughen
