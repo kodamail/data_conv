@@ -73,7 +73,7 @@ for VAR in ${VAR_LIST[@]} ; do
     XDEF=${DIMS[0]} ; YDEF=${DIMS[1]} ; ZDEF=${DIMS[2]}
     TDEF=${DIMS[3]} ; EDEF=${DIMS[4]}
     TDEF_START=$(     grads_ctl.pl ${INPUT_CTL_META} TDEF 1 ) || error_exit
-    #                                                                                                 
+    #
     START_HMS=$( date -u --date "${TDEF_START}" +%H%M%S )
     TMP_H=${START_HMS:0:2}
     TMP_M=${START_HMS:2:2}
