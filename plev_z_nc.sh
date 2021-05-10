@@ -95,8 +95,11 @@ for VAR in m${TARGET_VAR:1:1}_z ; do
     #---- generate control file (unified)
     #
     if [[ ! "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] ; then
+	#sed ${INPUT_CTL} -e "s|^DSET .*|DSET ^%ch.nc|" -e "/^CHSUB .*/d" -e "s/^${VAR_PRES}/${VAR}/" > ${OUTPUT_CTL}
+	#grep ^CHSUB ${INPUT_CTL} | sed -e "s|/|/${VAR}_|" -e "s|.000000||g" -e "s|-.*$||" >> ${OUTPUT_CTL}
+
 	sed ${INPUT_CTL} -e "s|^DSET .*|DSET ^%ch.nc|" -e "/^CHSUB .*/d" -e "s/^${VAR_PRES}/${VAR}/" > ${OUTPUT_CTL}
-	grep ^CHSUB ${INPUT_CTL} | sed -e "s|/|/${VAR}_|" -e "s|.000000||g" -e "s|-.*$||" >> ${OUTPUT_CTL}
+	grep ^CHSUB ${INPUT_CTL} | sed -e "s| \([^/ ]\+\)/ms_pres/ms_pres| \1/${VAR}|" >> ${OUTPUT_CTL}  # swap var/year
     fi
     #
     # check existence of input data
@@ -114,22 +117,31 @@ for VAR in m${TARGET_VAR:1:1}_z ; do
     #========================================#
     #  loop for each file
     #========================================#
-    YMD_PREV=-1
+    #YMD_PREV=-1
     for(( d=0; $d<${#INPUT_NC_LIST[@]}; d=$d+1 )) ; do
 	INPUT_NC=$(      readlink -e ${INPUT_NC_LIST[$d]}      ) || exit 1
 	#
 	TDEF_FILE=$( ncdump -h ${INPUT_NC} | grep "time =" | cut -d \; -f 1 |  cut -d = -f 2 )
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
         YMD=$( date -u --date "${YMD_GRADS}" +%Y%m%d ) || exit 1
-	(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
+	#(( ${YMD} == ${YMD_PREV} )) && { echo "error: time interval less than 1-dy is not supported now" ; exit 1 ; }
 	YEAR=${YMD:0:4}
+
+	echo ${INPUT_NC}
+	echo ${TDEF_FILE}
+	echo ${YMD_GRADS}
+	date_str=${INPUT_NC##*/}                                  # e.g. ms_pres_195001.nc
+	date_str=${date_str%.nc}                                  # e.g. ms_pres_195001
+	date_str=$( echo "${date_str}" | awk -F _ '{print $NF}' ) # e.g. 195001
         #
         #----- output data
         #
         # File name convention (YMD = first day)
         #   2004/ms_tem_${YMD}.nc
         #
-        OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.nc )
+        #OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.nc )
+        OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${date_str}.nc )
+
 	#
 	# check existence of output data
 	#
@@ -140,9 +152,9 @@ for VAR in m${TARGET_VAR:1:1}_z ; do
 	    rm -f ${OUTPUT_NC}
 	fi
 	[[ "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] && continue
-	#
+
 	mkdir -p ${OUTPUT_NC%/*} || exit 1
-        echo "YMD=${YMD}"
+        echo "DATE=${date_str}"
 
 	#
 	#----- z2pre
@@ -161,13 +173,14 @@ for VAR in m${TARGET_VAR:1:1}_z ; do
     varname   = '${VAR}',
     pname     = '${INPUT_NC}',
     outdir    = './',
-    outsuffix = '_${YMD}.nc',
+    outsuffix = '_${date_str}.nc',
     input_netcdf  = .true.
     output_netcdf = .true.
     undef     = -99.9e+33,
     flag_z    = .true.,
 /
 EOF
+#    outsuffix = '_${YMD}.nc',
 	cat z2pre.cnf
 	${BIN_Z2PRE} || exit 1
 	if (( ${VERBOSE} >= 1 )) ; then
@@ -177,11 +190,13 @@ EOF
 	    ${BIN_Z2PRE} > /dev/null || exit 1
 	fi
 	#
-	mv ${VAR}_${YMD}.nc ${OUTPUT_NC} || exit 1
+	#mv ${VAR}_${YMD}.nc ${OUTPUT_NC} || exit 1
+	mv ${VAR}_${date_str}.nc ${OUTPUT_NC} || exit 1
 	cd - > /dev/null || exit 1
-	mv ${TEMP_DIR}/z2pre.cnf ${OUTPUT_DIR}/${VAR}/log/z2pre_${YMD}.cnf
+#	mv ${TEMP_DIR}/z2pre.cnf ${OUTPUT_DIR}/${VAR}/log/z2pre_${YMD}.cnf
+	mv ${TEMP_DIR}/z2pre.cnf ${OUTPUT_DIR}/${VAR}/log/z2pre_${date_str}.cnf
 	#
-	YMD_PREV=${YMD}
+	#YMD_PREV=${YMD}
     done  # loop: d
 done  # loop: VAR
 
