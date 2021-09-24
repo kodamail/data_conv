@@ -195,10 +195,10 @@ for VAR in ${VAR_LIST[@]} ; do
 	    -e "/^CHSUB .*/d" \
 	    -e "s/^TDEF .*$/TDEF  time  ${OUTPUT_TDEF}  LINEAR  ${OUTPUT_TDEF_START}  ${OUTPUT_TDEF_INCRE_GRADS}/" \
 	    > ${OUTPUT_CTL}
-	grep ^CHSUB ${INPUT_CTL} | awk -v TSKIP=${TSKIP} '{ print $1,($2-1)/TSKIP+1,$3/TSKIP,$4 }' | sed -e "s|/|/${VAR}_|" -e "s|.000000||g" -e "s|-.*$||" >> ${OUTPUT_CTL}
+	grep ^CHSUB ${INPUT_CTL} | awk -v TSKIP=${TSKIP} '{ print $1,($2-1)/TSKIP+1,$3/TSKIP,$4 }' | sed -e "s|/${VAR}/|/|" -e "s|.000000||g" -e "s|-.*$||" >> ${OUTPUT_CTL}
+#	grep ^CHSUB ${INPUT_CTL} | awk -v TSKIP=${TSKIP} '{ print $1,($2-1)/TSKIP+1,$3/TSKIP,$4 }' | sed -e "s|/|/${VAR}_|" -e "s|.000000||g" -e "s|-.*$||" >> ${OUTPUT_CTL}
 
 #	grep ^CHSUB ${INPUT_CTL_REF} | sed -e "s|/|/${VAR}_|" -e "s|.000000||g" -e "s|-.*$||" >> ${OUTPUT_CTL}
-
     fi
 
     #
@@ -207,6 +207,7 @@ for VAR in ${VAR_LIST[@]} ; do
     #========================================#
     YMD_PREV=-1
     for INPUT_NC in ${INPUT_NC_LIST[@]} ; do
+
 #	TDEF_FILE=$( ${BIN_CDO} -s ntime ${INPUT_NC} )
 	TDEF_FILE=$( cdo -s ntime ${INPUT_NC} ) || exit 1
 	YMD_GRADS=$( grads_ctl.pl ${INPUT_NC} TDEF 1 )
@@ -219,7 +220,9 @@ for VAR in ${VAR_LIST[@]} ; do
         # File name convention (YMD = first day)
         #   2004/ms_tem_${YMD}.nc
         #
-        OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.nc )
+        #OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.nc )
+        OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${INPUT_NC##*/} )
+
 	#
 	# check existence of output data
 	#
@@ -232,7 +235,10 @@ for VAR in ${VAR_LIST[@]} ; do
 	[[ "${OVERWRITE}" =~ ^(dry-rm|rm)$ ]] && continue
 	#
 	mkdir -p ${OUTPUT_NC%/*} || exit 1
-        echo "YMD=${YMD}"
+        #echo "YMD=${YMD}"
+	echo
+        echo "Input: ${INPUT_NC}"
+        echo "    -> ${OUTPUT_NC}"
 	NOTHING=0
 	#
 	if [[ "${SA}" = "s" ]] ; then  # snapshot
