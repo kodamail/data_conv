@@ -48,7 +48,8 @@ FLAG_KEEP_NC=0  # NetCDF -> NetCDF
 
 OVERWRITE="no"
 VERBOSE=0
-INC_SUBVARS="yes"
+#INC_SUBVARS="yes"
+INC_SUBVARS=${INC_SUBVARS:-yes}
 #############################################################
 
 . cnf/common.sh
