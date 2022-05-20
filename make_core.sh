@@ -520,10 +520,11 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     #
     for DIR_IN in ${DIR_IN_LIST[@]} ; do
     for VAR in ${VARS_ANA[@]} ; do
-	[[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
-	DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 	#
 	if [[ "${PERIOD}" == "monthly_mean" ]] ; then
+	    [[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
+	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
+
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./monthly_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
@@ -535,7 +536,9 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    fi
 	elif [[ "${PERIOD}" == "annual_mean" ]] ; then
 	    DIR_IN_NEW=${DIR_IN%tstep}monthly_mean  # use monthly-mean
-	    [[ ! -d ${DIR_IN_NEW} ]] && continue
+	    [[ ! -f "${DIR_IN_NEW}/${VAR}/${VAR}.ctl" ]] && continue
+	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TDEF=${PERIOD} ) || exit 1
+	    #[[ ! -d ${DIR_IN_NEW} ]] && continue
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./annual_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN_NEW} ${DIR_OUT} \
