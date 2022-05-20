@@ -93,7 +93,8 @@ for VAR in ${VAR_LIST[@]} ; do
 #	done
 	(( OUTPUT_TDEF=Y_END-Y_STARTMM ))
 #	OUTPUT_TDEF_START=15$( date -u --date "${INPUT_TDEF_START}" +%b%Y ) || exit 1
-	OUTPUT_TDEF_START=01$( date -u --date "${INPUT_TDEF_START}" +%b%Y ) || exit 1
+#	OUTPUT_TDEF_START=01$( date -u --date "${INPUT_TDEF_START}" +%b%Y ) || exit 1
+	OUTPUT_TDEF_START=01Jan$( date -u --date "${INPUT_TDEF_START}" +%Y ) || exit 1
 	sed ${INPUT_CTL_META} \
 	    -e "s|^DSET .*|DSET ^${VAR}_%y4.nc|" \
 	    -e "/^CHSUB .*/d" \
