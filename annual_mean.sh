@@ -121,7 +121,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	(( ${EDEF} > 1 )) && STR_ENS="_bin%e"
 	#let OUTPUT_TDEF=INPUT_TDEF/12
 	let OUTPUT_TDEF=Y_END-Y_STARTMM+1
-	OUTPUT_TDEF_START=01Jul$( date -u --date "${INPUT_TDEF_START}" +%Y ) || error_exit
+	OUTPUT_TDEF_START=01Jun$( date -u --date "${INPUT_TDEF_START}" +%Y ) || error_exit
 
 	sed ${OUTPUT_CTL}.tmp1 \
             -e "s|^DSET .*$|DSET ^${VAR}_%y4${STR_ENS}.grd|" \
