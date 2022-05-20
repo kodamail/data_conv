@@ -544,8 +544,9 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 		    ${DIR_IN_NEW} ${DIR_OUT} \
 		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
 	    else
-		echo "error"
-		exit 1
+		./annual_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
+		    ${DIR_IN_NEW} ${DIR_OUT} \
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || error_exit
 	    fi
 	else
 	    SA=
