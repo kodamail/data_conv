@@ -74,15 +74,6 @@ for VAR in ${VAR_LIST[@]} ; do
 #		VAR_IN+=( ${VAR:0:3}${V})
 #	    done
 	;;
-#	"s${SA}_ws10m")
-#	    exit 1
-#	    INPUT_CTL_LIST=( 
-#		${INPUT_DIR}/s${SA}_u10m/s${SA}_u10m.ctl
-#		${INPUT_DIR}/s${SA}_v10m/s${SA}_v10m.ctl
-#		)
-##	    INPUT_VAR_REF=ss_u10m
-#	    GRADS_VAR="sqrt(s${SA}_u10m.1*s${SA}_u10m.1+s${SA}_v10m.2*s${SA}_v10m.2)"
-#	    ;;
       "ws")
         INPUT_CTL_U=$( readlink -e ${INPUT_DIR}/${VAR:0:3}u/${VAR:0:3}u.ctl ) \
 	    || { echo "warning: ${INPUT_DIR}/${VAR:0:3}u/${VAR:0:3}u.ctl does not exist." ; continue ; }
@@ -95,6 +86,17 @@ for VAR in ${VAR_LIST[@]} ; do
 	VAR_REF=ms_u_p850
 	#GRADS_VAR="sqrt(${VAR:0:3}u.1*${VAR:0:3}u.1+${VAR:0:3}v.2*${VAR:0:3}v.2)"
 	;;
+      "ws10m")
+        INPUT_CTL_U=$( readlink -e ${INPUT_DIR}/${VAR:0:3}u10m/${VAR:0:3}u10m.ctl ) \
+	    || { echo "warning: ${INPUT_DIR}/${VAR:0:3}u10m/${VAR:0:3}u10m.ctl does not exist." ; continue ; }
+	VAR_U=${VAR:0:3}u10m
+
+        INPUT_CTL_V=$( readlink -e ${INPUT_DIR}/${VAR:0:3}v10m/${VAR:0:3}v10m.ctl ) \
+	    || { echo "warning: ${INPUT_DIR}/${VAR:0:3}v10m/${VAR:0:3}v10m.ctl does not exist." ; continue ; }
+	VAR_V=${VAR:0:3}v10m
+	INPUT_CTL_REF=${INPUT_CTL_U}
+	VAR_REF=ss_u10m
+        ;;
       *)
         echo "error: ${VAR} is not supported."
 	exit 1
@@ -146,7 +148,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	    INPUT_PRES_NC_LIST+=( ${INPUT_PRES_NC} )
 	done
 	;;
-      "ws")
+      "ws"|"ws10m")
         INPUT_U_NC_LIST=()
         INPUT_V_NC_LIST=()
 	for INPUT_DSET in ${INPUT_DSET_LIST[@]} ; do
@@ -250,9 +252,13 @@ for VAR in ${VAR_LIST[@]} ; do
         # File name convention (YMD = first day)
         #   2004/ms_tem_${YMD}.nc
         #
-	OUTPUT_NC_BASENAME=$( echo ${INPUT_REF_NC##*/} | sed -e "s|${VAR_REF}|ms_ws|" )
+	if [[ "${VAR:3}" = "ws" ]] ; then
+	    OUTPUT_NC_BASENAME=$( echo ${INPUT_REF_NC##*/} | sed -e "s|${VAR_REF}|ms_ws|" )
+	else
+	    OUTPUT_NC_BASENAME=$( echo ${INPUT_REF_NC##*/} | sed -e "s|${VAR_REF}|ss_ws10m|" )
+	fi
 	[[ "${OUTPUT_NC_BASENAME}" = "ms_ws.nc" ]] && OUTPUT_NC_BASENAME=${VAR}_${YMD}.nc
-        #OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${VAR}_${YMD}.nc )
+	[[ "${OUTPUT_NC_BASENAME}" = "ss_ws10m.nc" ]] && OUTPUT_NC_BASENAME=${VAR}_${YMD}.nc
         OUTPUT_NC=$( readlink -m ${OUTPUT_DIR}/${VAR}/${YEAR}/${OUTPUT_NC_BASENAME} )
 	#
 	# check existence of output data
@@ -277,8 +283,13 @@ for VAR in ${VAR_LIST[@]} ; do
 	cdo -s -b 32 sqr ${INPUT_V_NC} v2.nc || exit 1
 	cdo -s -b 32 add u2.nc v2.nc uv2.nc  || exit 1
 	cdo -s -b 32 sqrt uv2.nc temp.nc     || exit 1
-	cdo -s setname,ms_ws temp.nc temp2.nc || exit 1
-	cdo -s setattribute,ms_ws@units="m/s",ms_ws@long_name="windspeed" temp2.nc temp3.nc || exit 1
+	if [[ "${VAR:3}" = "ws" ]] ; then
+	    cdo -s setname,ms_ws temp.nc temp2.nc || exit 1
+	    cdo -s setattribute,ms_ws@units="m/s",ms_ws@long_name="windspeed" temp2.nc temp3.nc || exit 1
+	else
+	    cdo -s setname,ss_ws10m temp.nc temp2.nc || exit 1
+	    cdo -s setattribute,ss_ws10m@units="m/s",ss_ws10m@long_name="windspeed" temp2.nc temp3.nc || exit 1
+	fi
 	mv temp3.nc ${OUTPUT_NC} || exit 1
 	rm u2.nc v2.nc uv2.nc temp.nc temp2.nc
 	#
