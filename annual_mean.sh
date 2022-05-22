@@ -111,7 +111,7 @@ for VAR in ${VAR_LIST[@]} ; do
 	if [[ "${INC_SUBVARS}" = "yes" ]] ; then
 	    grads_ctl.pl ${INPUT_CTL} > ${OUTPUT_CTL}.tmp1 || error_exit
 	else
-	    TMP=$( grads_ctl.pl ${INPUT_CTL} VARS | grep ^${VAR} )
+	    TMP=$( grads_ctl.pl ${INPUT_CTL} VARS | sed -e "s/^[^ ]\+=>//" | grep ^${VAR} )
 #	    TMP=$( echo ${TMP} | awk '{ print $1, 99, }'sed -e "s///" )
 	    TMP=$( echo ${TMP} | awk '{ out=$1" "$2" 99"; for(i=4;i<=NF; i++){ out=out" "$i } ; print out }' )
 	    grads_ctl.pl ${INPUT_CTL} --set "VARS 1" --set "${TMP}" > ${OUTPUT_CTL}.tmp1 || error_exit
