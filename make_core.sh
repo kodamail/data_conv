@@ -553,10 +553,12 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
 #		echo "error! multi_step3.sh should be re-written!"
 #		exit 1
+	    [[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
+	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./multi_step_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
+		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || error_exit
 	    else
 		./multi_step.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
