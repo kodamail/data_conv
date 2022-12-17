@@ -207,7 +207,7 @@ if (( ${FLAG_TSTEP_Z2PRE} == 1 )) ; then
 	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
 		DIR_OUT=$( conv_dir ${DIR_OUT} ZID=${PDEF_LEVELS_TMP} ) || error_exit
 	    elif (( ${PDEF} <= 5 )) ; then
-		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS//,/+} ) || error_exit 1
+		DIR_OUT=$( conv_dir ${DIR_OUT} ZLEV=${PDEF_LEVELS//,/+} ) || error_exit
 	    else
 		DIR_OUT=$( conv_dir ${DIR_OUT} ZDEF=${PDEF} ) || error_exit
 	    fi
@@ -252,12 +252,12 @@ if (( ${FLAG_TSTEP_PLEVOMEGA} == 1 )) ; then
                               ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || error_exit
     DIR_INOUT_LIST=()
     PDEF_LEVELS_IN_LIST=()
-    PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || exit 1
+    PDEF=$( get_pdef ${PDEF_LEVELS_LIST[0]} ) || error_exit
     for HGRID in ${HGRID_LIST[@]} ; do
 	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
 	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
 	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
-	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || error_exit
 	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
 		DIR_INOUT=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_${PDEF_LEVELS_TMP}/tstep
 	    elif (( ${PDEF} <= 5 )) ; then
@@ -284,7 +284,7 @@ if (( ${FLAG_TSTEP_PLEVOMEGA} == 1 )) ; then
 	    DIR_INOUT_NEW=$( echo ${DIR_INOUT} | sed -e "s|/tstep$|/${PERIOD}|" ) || error_exit
 	    #
 	    if [[ ${FLAG_KEEP_NC} -eq 1 ]] ; then
-exit 1
+error_exit
 		./plev_omega_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_INOUT_NEW} \
 		    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || error_exit
@@ -294,10 +294,10 @@ exit 1
 		    ${PDEF_LEVELS_LIST[0]} m${TYPE}_w none m${TYPE}_tem ${OVERWRITE} || error_exit
 	    fi
 	    #
-	    mkdir -p ${DIR_INOUT}/../tstep || exit 1
-	    cd ${DIR_INOUT}/../tstep || exit 1
+	    mkdir -p ${DIR_INOUT}/../tstep || error_exit
+	    cd ${DIR_INOUT}/../tstep || error_exit
 	    [[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
-	    cd - > /dev/null || exit 1
+	    cd - > /dev/null || error_exit
 	done  # loop: VAR
     done # loop: i
 fi  # end of ${FLAG_TSTEP_PLEVOMEGA} == 1
@@ -347,9 +347,9 @@ fi  # end of ${FLAG_TSTEP_PLEVOMEGA} == 1
 if (( ${FLAG_TSTEP_ISCCP3CAT} == 1 )) ; then
     VARS_ANA=()
     VARS_ANA=( dfq_isccp2 )
-    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || error_exit
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
-                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || error_exit
     DIR_IN_LIST=()
     for HGRID in ${HGRID_LIST[@]} ; do
 	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
@@ -361,19 +361,19 @@ if (( ${FLAG_TSTEP_ISCCP3CAT} == 1 )) ; then
     for VAR in ${VARS_ANA[@]} ; do
 	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
 	[[ ! -f "${INPUT_CTL}" ]] && continue
-	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
-	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
-	DIR_OUT=$( conv_dir ${DIR_IN_NEW} ZDEF=3 ) || exit 1
+	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || error_exit
+	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || error_exit
+	DIR_OUT=$( conv_dir ${DIR_IN_NEW} ZDEF=3 ) || error_exit
         #
-	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for isccp_3cat.sh" ; exit 1; }
+	[[ ${FLAG_KEEP_NC} -eq 1 ]] && error_exit "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for isccp_3cat.sh"
 	./isccp_3cat.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
-	    ${OVERWRITE} || exit 1
+	    ${OVERWRITE} || error_exit
         #
-	mkdir -p ${DIR_OUT}/../tstep || exit 1
-	cd ${DIR_OUT}/../tstep || exit 1
+	mkdir -p ${DIR_OUT}/../tstep || error_exit
+	cd ${DIR_OUT}/../tstep || error_exit
 	[[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
-	cd - > /dev/null || exit 1
+	cd - > /dev/null || error_exit
     done # loop: VAR
     done # loop: DIR_IN
 fi
@@ -384,9 +384,9 @@ fi
 if (( ${FLAG_TSTEP_ZM} == 1 )) ; then
     VARS_ANA=()
     VARS_ANA=( all )
-    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]}   ${VARS_ANA[@]} ) ) || error_exit
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]}   ${VARS_ANA[@]} \
-                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || exit 1
+                              ${#VARS_TSTEP[@]} ${VARS_TSTEP[@]} ) ) || error_exit
     DIR_IN_LIST=()
     for HGRID in ${HGRID_LIST[@]} ; do
 	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
@@ -398,7 +398,7 @@ if (( ${FLAG_TSTEP_ZM} == 1 )) ; then
 	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
 	done
 	for PDEF_LEVELS in ${PDEF_LEVELS_LIST[@]} ; do
-	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || error_exit
 	    DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}x${PDEF}/tstep
 	    [[ -d "${DIR_IN}" ]] && DIR_IN_LIST+=( ${DIR_IN} )
 	done
@@ -407,19 +407,19 @@ if (( ${FLAG_TSTEP_ZM} == 1 )) ; then
     for VAR in ${VARS_ANA[@]} ; do
 	INPUT_CTL=${DIR_IN}/${VAR}/${VAR}.ctl
 	[[ ! -f "${INPUT_CTL}" ]] && continue
-	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
-	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
-	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
+	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || error_exit
+	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || error_exit
+	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || error_exit
         #
-	[[ ${FLAG_KEEP_NC} -eq 1 ]] && { echo "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for zonal_mean.sh" ; exit 1; }
+	[[ ${FLAG_KEEP_NC} -eq 1 ]] && error_exit "FLAG_KEEP_NC=${FLAG_KEEP_NC} is not supported for zonal_mean.sh"
 	./zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 	    ${DIR_IN_NEW} ${DIR_OUT} \
-	    ${OVERWRITE} ${VAR} || exit 1
+	    ${OVERWRITE} ${VAR} || error_exit
         #
-	mkdir -p ${DIR_OUT}/../tstep || exit 1
-	cd ${DIR_OUT}/../tstep || exit 1
+	mkdir -p ${DIR_OUT}/../tstep || error_exit
+	cd ${DIR_OUT}/../tstep || error_exit
 	[[ ! -d "${VAR}" && ! -L "${VAR}" ]] && ln -s ../${PERIOD}/${VAR}
-	cd - > /dev/null || exit 1
+	cd - > /dev/null || error_exit
     done  # loop: VAR
     done  # loop: DIR_IN
 fi
@@ -491,9 +491,9 @@ for PERIOD in ${TGRID_LIST[@]} ; do
     echo "#"
     #
     VARS_ANA=( all )
-    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || error_exit
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]} ${VARS_ANA[@]} \
-                              ${#VARS[@]}     ${VARS[@]} ) ) || exit 
+                              ${#VARS[@]}     ${VARS[@]} ) ) || error_exit
     DIR_IN_LIST=()
     for HGRID in ${HGRID_LIST[@]} ; do
 	for DIR_IN in \
@@ -506,7 +506,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	done
 	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
 	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
-	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || error_exit
 	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
 		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_${PDEF_LEVELS_TMP}/tstep
 	    elif (( ${PDEF} <= 5 )) ; then
@@ -523,26 +523,26 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	#
 	if [[ "${PERIOD}" == "monthly_mean" ]] ; then
 	    [[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
-	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
+	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || error_exit
 
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./monthly_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || error_exit
 	    else
 		./monthly_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || error_exit
 	    fi
 	elif [[ "${PERIOD}" == "annual_mean" ]] ; then
 	    DIR_IN_NEW=${DIR_IN%tstep}monthly_mean  # use monthly-mean
 	    [[ ! -f "${DIR_IN_NEW}/${VAR}/${VAR}.ctl" ]] && continue
-	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TDEF=${PERIOD} ) || exit 1
+	    DIR_OUT=$( conv_dir ${DIR_IN_NEW} TDEF=${PERIOD} ) || error_exit
 	    #[[ ! -d ${DIR_IN_NEW} ]] && continue
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./annual_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN_NEW} ${DIR_OUT} \
-		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || exit 1
+		    ${OVERWRITE} ${INC_SUBVARS} ${VAR} || error_exit
 	    else
 		./annual_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN_NEW} ${DIR_OUT} \
@@ -552,9 +552,8 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    SA=
 # -> WHY?		[ "${VAR}" = "zonal" -o "${VAR}" = "vint" -o "${VAR}" = "gmean" ] && SA="s"
 #		echo "error! multi_step3.sh should be re-written!"
-#		exit 1
 	    [[ ! -f "${DIR_IN}/${VAR}/${VAR}.ctl" ]] && continue
-	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || exit 1
+	    DIR_OUT=$( conv_dir ${DIR_IN} TDEF=${PERIOD} ) || error_exit
 	    if (( ${FLAG_KEEP_NC} == 1 )) ; then
 		./multi_step_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
@@ -562,7 +561,7 @@ for PERIOD in ${TGRID_LIST[@]} ; do
 	    else
 		./multi_step.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		    ${DIR_IN} ${DIR_OUT} \
-		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || exit 1
+		    ${PERIOD} ${OVERWRITE} ${INC_SUBVARS} ${VAR} ${SA} || error_exit
 	    fi
 	fi
     done  # loop: VAR
@@ -579,9 +578,9 @@ VARS_MM=()
 for TGRID in ${TGRID_LIST[@]} ; do
     if [[ "${TGRID}" == "monthly_mean" ]] ; then
 	VARS_MM=( all )  # default variables
-	VARS_MM=( $( expand_vars ${#VARS_MM[@]} ${VARS_MM[@]} ) ) || exit 1
+	VARS_MM=( $( expand_vars ${#VARS_MM[@]} ${VARS_MM[@]} ) ) || error_exit
 	VARS_MM=( $( dep_var     ${#VARS_MM[@]} ${VARS_MM[@]} \
-                                 ${#VARS[@]}    ${VARS[@]} ) ) || exit 1
+                                 ${#VARS[@]}    ${VARS[@]} ) ) || error_exit
 	echo "############################################################"
 	echo "#"
 	echo "# Basic Analysis (after monthly-mean)"
@@ -597,9 +596,9 @@ done
 if (( ${FLAG_MM_ZM} == 1 )) ; then
     VARS_ANA=()
     VARS_ANA=( all )
-    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || exit 1
+    VARS_ANA=( $( expand_vars ${#VARS_ANA[@]} ${VARS_ANA[@]} ) ) || error_exit
     VARS_ANA=( $( dep_var     ${#VARS_ANA[@]} ${VARS_ANA[@]} \
-                              ${#VARS_MM[@]}  ${VARS_MM[@]} ) ) || exit 1
+                              ${#VARS_MM[@]}  ${VARS_MM[@]} ) ) || error_exit
     DIR_IN_LIST=()
     for HGRID in ${HGRID_LIST[@]} ; do
 	[[ "$( echo ${HGRID} | sed -e "s/[0-9]\+x[0-9]\+//" )" != "" ]] && continue
@@ -611,7 +610,7 @@ if (( ${FLAG_MM_ZM} == 1 )) ; then
 	done
 	for PDEF_LEVELS_TMP in ${PDEF_LEVELS_LIST[@]} ; do
 	    PDEF_LEVELS=$( pid2plevels ${PDEF_LEVELS_TMP} )
-	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || exit 1
+	    PDEF=$( get_pdef ${PDEF_LEVELS} ) || error_exit
 	    if [[ "${PDEF_LEVELS_TMP}" != "${PDEF_LEVELS}" ]] ; then
 		DIR_IN=${DCONV_TOP_RDIR}/ml_plev/${HGRID}_${PDEF_LEVELS_TMP}/monthly_mean
 	    elif (( ${PDEF} <= 1 )) ; then
@@ -629,16 +628,16 @@ if (( ${FLAG_MM_ZM} == 1 )) ; then
 #	PERIOD=$( tstep_2_period ${INPUT_CTL} ) || exit 1
 #	DIR_IN_NEW=$( echo ${DIR_IN} | sed -e "s|/tstep$|/${PERIOD}|" ) || exit 1
 #	DIR_OUT=$( conv_dir ${DIR_IN_NEW} XDEF=ZMEAN ) || exit 1
-	DIR_OUT=$( conv_dir ${DIR_IN} XDEF=MMZMEAN ) || exit 1
+	DIR_OUT=$( conv_dir ${DIR_IN} XDEF=MMZMEAN ) || error_exit
     #
 	if (( ${FLAG_KEEP_NC} == 1 )) ; then
 	    ./monthly_zonal_mean_nc.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		${DIR_IN} ${DIR_OUT} \
-		${OVERWRITE} ${VAR} || exit 1
+		${OVERWRITE} ${VAR} || error_exit
 	else
 	    ./monthly_zonal_mean.sh ${CNFID} ${START_YMD} ${ENDPP_YMD} \
 		${DIR_IN} ${DIR_OUT} \
-		${OVERWRITE} ${VAR} || exit 1
+		${OVERWRITE} ${VAR} || error_exit
 	fi
     done  # loop: VAR
     done  # loop: DIR_IN
